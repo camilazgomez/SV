@@ -1,0 +1,60 @@
+﻿@model SV.Models.RealStateForm
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>RealStateForm</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.NatureOfTheDeed)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.NatureOfTheDeed)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Commune)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Commune)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Block)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Block)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Property)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Property)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Sheets)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Sheets)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.InscriptionDate)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.InscriptionDate)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.InscriptionNumber)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.InscriptionNumber)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.AttentionNumber">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
