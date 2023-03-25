@@ -9,7 +9,7 @@
 <h4>RealStateForm</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <div class="form-group">
@@ -35,6 +35,26 @@
                 <input asp-for="Property" class="form-control" />
                 <span asp-validation-for="Property" class="text-danger"></span>
             </div>
+            <div class="row">
+                <div class="col-sm">
+                    <label for="rut">RUT:</label>
+                    <input type="text" class="form-control form-control-inline" id="rut" placeholder="Ingrese su rut" name="rut">
+                </div>
+                <div class="col-sm">
+                    <label for="ownershipPercentage">% de Derecho:</label>
+                    <input type="number" class="form-control form-control-inline" id="ownershipPercentage" placeholder="99.4" step="0.01" name="ownershipPercentage">
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" value="" id="uncreditedOwnership">
+                    <label class="form-check-label" for="flexCheckDefault">
+                        % de Derecho no Acreditado:
+                    </label>
+                </div>
+                <input type="hidden" name="enajenante" value="true">
+                <input type="hidden" name="adquiriente" value="false">
+            </div>
+            
             <div class="form-group">
                 <label asp-for="Sheets" class="control-label">Fojas</label>
                 <input asp-for="Sheets" class="form-control" />
@@ -53,6 +73,7 @@
             <div class="form-group">
                 <input type="submit" value="Create" class="btn btn-primary" />
             </div>
+     
         </form>
     </div>
 </div>
