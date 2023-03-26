@@ -8,12 +8,12 @@ function addSellerFormFields() {
     sellersDiv.appendChild(newSellerRow);
 }
 
-const addHeirBtn = document.querySelector("#add-heir");
-addHeirBtn.addEventListener("click", addHeirFormFields)
+const addBuyerBtn = document.querySelector("#add-buyer");
+addBuyerBtn.addEventListener("click", addBuyerFormFields)
 
-function addHeirFormFields() {
-    const heirsDiv = document.querySelector(".heirs");
-    const newHeirRow = document.querySelector(".heir").cloneNode(true);
+function addBuyerFormFields() {
+    const heirsDiv = document.querySelector(".buyers");
+    const newHeirRow = document.querySelector(".buyer").cloneNode(true);
     newHeirRow.removeAttribute("hidden");
     heirsDiv.appendChild(newHeirRow);
 }
