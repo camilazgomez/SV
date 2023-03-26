@@ -2,10 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SV.Models;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace SV.Controllers
 {
@@ -60,6 +63,16 @@ namespace SV.Controllers
             if (ModelState.IsValid)
             {
                 _context.Add(realStateForm);
+                System.Diagnostics.Debug.WriteLine(Request.Form["rutSeller"].Count);
+                for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
+                {
+                    System.Diagnostics.Debug.WriteLine(Request.Form["rutSeller"][seller]);
+                }
+                
+                System.Diagnostics.Debug.WriteLine("wiiii veamoos");
+                
+
+               
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
