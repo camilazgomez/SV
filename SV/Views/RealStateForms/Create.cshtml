@@ -35,26 +35,92 @@
                 <input asp-for="Property" class="form-control" />
                 <span asp-validation-for="Property" class="text-danger"></span>
             </div>
-            <div class="row">
-                <div class="col-sm">
-                    <label for="rut">RUT:</label>
-                    <input type="text" class="form-control form-control-inline" id="rut" placeholder="Ingrese su rut" name="rut">
-                </div>
-                <div class="col-sm">
-                    <label for="ownershipPercentage">% de Derecho:</label>
-                    <input type="number" class="form-control form-control-inline" id="ownershipPercentage" placeholder="99.4" step="0.01" name="ownershipPercentage">
-                </div>
+            <div class="sellers">
+                <h5>Información de los Enajenante(s) o Causante(s)</h5>
+                <div class="row seller" hidden>
+                    <div class="col-sm">
+                        <label for="rut">RUT:</label>
+                        <input type="text" class="form-control form-control-inline" id="rut" placeholder="Ingrese su rut" name="rut">
+                    </div>
+                    <div class="col-sm">
+                        <label for="ownershipPercentage">% de Derecho:</label>
+                        <input type="number" class="form-control form-control-inline" id="ownershipPercentage" placeholder="99.4" step="0.01" name="ownershipPercentage">
+                    </div>
 
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="uncreditedOwnership">
-                    <label class="form-check-label" for="flexCheckDefault">
-                        % de Derecho no Acreditado:
-                    </label>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="uncreditedOwnership">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            % de Derecho no Acreditado:
+                        </label>
+                    </div>
+                    <input type="hidden" name="enajenante" value="true">
+                    <input type="hidden" name="adquiriente" value="false">
                 </div>
-                <input type="hidden" name="enajenante" value="true">
-                <input type="hidden" name="adquiriente" value="false">
+                <div class="row seller">
+                    <div class="col-sm">
+                        <label for="rut">RUT:</label>
+                        <input type="text" class="form-control form-control-inline" id="rut" placeholder="Ingrese su rut" name="rut">
+                    </div>
+                    <div class="col-sm">
+                        <label for="ownershipPercentage">% de Derecho:</label>
+                        <input type="number" class="form-control form-control-inline" id="ownershipPercentage" placeholder="99.4" step="0.01" name="ownershipPercentage">
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="uncreditedOwnership">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            % de Derecho no Acreditado:
+                        </label>
+                    </div>
+                    <input type="hidden" name="enajenante" value="true">
+                    <input type="hidden" name="adquiriente" value="false">
+                </div>
             </div>
-            
+            <button class="btn-danger" type="button" id="add-seller">Agregar</button>
+
+            <div class="heirs">
+                <h5>Información de los Adquiriente(s) o Heredero(s)</h5>
+                <div class="row heir" hidden>
+                    <div class="col-sm">
+                        <label for="rut">RUT:</label>
+                        <input type="text" class="form-control form-control-inline" id="rut" placeholder="Ingrese su rut" name="rut">
+                    </div>
+                    <div class="col-sm">
+                        <label for="ownershipPercentage">% de Derecho:</label>
+                        <input type="number" class="form-control form-control-inline" id="ownershipPercentage" placeholder="99.4" step="0.01" name="ownershipPercentage">
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="uncreditedOwnership">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            % de Derecho no Acreditado:
+                        </label>
+                    </div>
+                    <input type="hidden" name="enajenante" value="false">
+                    <input type="hidden" name="adquiriente" value="true">
+                </div>
+                <div class="row heir">
+                    <div class="col-sm">
+                        <label for="rut">RUT:</label>
+                        <input type="text" class="form-control form-control-inline" id="rut" placeholder="Ingrese su rut" name="rut">
+                    </div>
+                    <div class="col-sm">
+                        <label for="ownershipPercentage">% de Derecho:</label>
+                        <input type="number" class="form-control form-control-inline" id="ownershipPercentage" placeholder="99.4" step="0.01" name="ownershipPercentage">
+                    </div>
+
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" value="" id="uncreditedOwnership">
+                        <label class="form-check-label" for="flexCheckDefault">
+                            % de Derecho no Acreditado:
+                        </label>
+                    </div>
+                    <input type="hidden" name="enajenante" value="false">
+                    <input type="hidden" name="adquiriente" value="true">
+                </div>
+            </div>
+            <button class="btn-danger" type="button" id="add-heir">Agregar</button>
+
             <div class="form-group">
                 <label asp-for="Sheets" class="control-label">Fojas</label>
                 <input asp-for="Sheets" class="form-control" />
