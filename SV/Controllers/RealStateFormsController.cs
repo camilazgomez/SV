@@ -63,17 +63,17 @@ namespace SV.Controllers
             if (ModelState.IsValid)
             {
                 _context.Add(realStateForm);
+                await _context.SaveChangesAsync();
+
                 System.Diagnostics.Debug.WriteLine(Request.Form["rutSeller"].Count);
                 for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
                 {
                     System.Diagnostics.Debug.WriteLine(Request.Form["rutSeller"][seller]);
-                }
-                
-                System.Diagnostics.Debug.WriteLine("wiiii veamoos");
-                
 
-               
-                await _context.SaveChangesAsync();
+                }
+                System.Diagnostics.Debug.WriteLine(_context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber);
+
+                System.Diagnostics.Debug.WriteLine("wiiii veamoos");
                 return RedirectToAction(nameof(Index));
             }
             return View(realStateForm);
