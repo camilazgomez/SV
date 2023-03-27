@@ -53,6 +53,9 @@ namespace SV.Controllers
             return View();
         }
 
+      
+
+
         // POST: RealStateForms/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -65,11 +68,31 @@ namespace SV.Controllers
                 _context.Add(realStateForm);
                 await _context.SaveChangesAsync();
 
-                System.Diagnostics.Debug.WriteLine(Request.Form["rutSeller"].Count);
+              
                 for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
                 {
-                    System.Diagnostics.Debug.WriteLine(Request.Form["rutSeller"][seller]);
-
+                    System.Diagnostics.Debug.WriteLine("************");
+                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedOwnershipSeller"]);
+                    
+                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedOwnershipSeller"].Count);
+                    System.Diagnostics.Debug.WriteLine("************");
+                    Person newSeller = new();
+                    newSeller.Rut = Request.Form["rutSeller"][seller]; 
+                    newSeller.OwnershipPercentage= double.Parse(Request.Form["ownershipPercentageSeller"][seller]);
+                    if (Request.Form["uncreditedOwnershipSeller"][seller-1] == "")    
+                    {
+                        newSeller.UncreditedOwnership = false;
+                    }
+                    else
+                    {
+                        newSeller.UncreditedOwnership = true;
+                    }
+           
+                    newSeller.Seller = true;
+                    newSeller.Heir = false;
+                    newSeller.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
+                    _context.Add(newSeller);
+                    await _context.SaveChangesAsync();
                 }
                 System.Diagnostics.Debug.WriteLine(_context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber);
 
@@ -78,7 +101,7 @@ namespace SV.Controllers
             }
             return View(realStateForm);
         }
-
+        
         // GET: RealStateForms/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
