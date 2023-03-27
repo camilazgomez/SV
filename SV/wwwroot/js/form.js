@@ -30,7 +30,27 @@ function addBuyerFormFields() {
     lastUncreditedOwnershipBuyer.setAttribute("id", newUncreditedOwnershipBuyerId);
 }
 
+const form = document.getElementById("form"); 
+form.addEventListener("submit", defineHiddenFieldState);
+
+function defineHiddenFieldState(event) {
+    const allLastUncreditedOwnershipSellerInputs = document.querySelectorAll('[name="uncreditedOwnershipSeller"]');
+    const allLastUncreditedOwnershipSellerHiddenFields = document.querySelectorAll('[name="uncreditedClickedSeller"]');
+    const lastUncreditedOwnershipSellersCount = allLastUncreditedOwnershipSellerInputs.length;
+    allLastUncreditedOwnershipSellerInputs.forEach(function (checkbox, indexOfCheckbox) {
+        if (checkbox.checked) {
+            allLastUncreditedOwnershipSellerHiddenFields[indexOfCheckbox].setAttribute("value", true); 
+            
+        }
+    });
+   
+    
+}
+
 window.onload = function () {
     addSellerFormFields();
     addBuyerFormFields();
+    
 }
+
+

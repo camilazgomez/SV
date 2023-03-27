@@ -72,21 +72,15 @@ namespace SV.Controllers
                 for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
                 {
                     System.Diagnostics.Debug.WriteLine("************");
-                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedOwnershipSeller"]);
-                    
-                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedOwnershipSeller"].Count);
+
+                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedClickedSeller"].Count);
+                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedClickedSeller"][seller]);
                     System.Diagnostics.Debug.WriteLine("************");
                     Person newSeller = new();
                     newSeller.Rut = Request.Form["rutSeller"][seller]; 
                     newSeller.OwnershipPercentage= double.Parse(Request.Form["ownershipPercentageSeller"][seller]);
-                    if (Request.Form["uncreditedOwnershipSeller"][seller-1] == "")    
-                    {
-                        newSeller.UncreditedOwnership = false;
-                    }
-                    else
-                    {
-                        newSeller.UncreditedOwnership = true;
-                    }
+                    newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
+                   
            
                     newSeller.Seller = true;
                     newSeller.Heir = false;
@@ -94,9 +88,7 @@ namespace SV.Controllers
                     _context.Add(newSeller);
                     await _context.SaveChangesAsync();
                 }
-                System.Diagnostics.Debug.WriteLine(_context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber);
-
-                System.Diagnostics.Debug.WriteLine("wiiii veamoos");
+                
                 return RedirectToAction(nameof(Index));
             }
             return View(realStateForm);
