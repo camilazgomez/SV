@@ -17,3 +17,8 @@ function addBuyerFormFields() {
     newHeirRow.removeAttribute("hidden");
     heirsDiv.appendChild(newHeirRow);
 }
+
+window.onload = function () {
+    addSellerFormFields();
+    addBuyerFormFields();
+}

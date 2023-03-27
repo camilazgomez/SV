@@ -17,7 +17,6 @@
 
   <ItemGroup>
     <Folder Include="NewFolder1\" />
-    <Folder Include="Scripts\" />
   </ItemGroup>
 
 </Project>

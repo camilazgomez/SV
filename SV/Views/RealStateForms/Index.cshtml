@@ -13,25 +13,28 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.NatureOfTheDeed)
+                Número de Atención
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Commune)
+                CNE
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Block)
+                Comuna
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Property)
+                Manzana
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.Sheets)
+                Predio
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.InscriptionDate)
+                Fojas
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.InscriptionNumber)
+                Fecha de Inscripción
+            </th>
+            <th>
+                Número de Inscripción
             </th>
             <th></th>
         </tr>
@@ -39,6 +42,9 @@
     <tbody>
 @foreach (var item in Model) {
         <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.AttentionNumber)
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.NatureOfTheDeed)
             </td>
