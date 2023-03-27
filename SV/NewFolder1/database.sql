@@ -106,8 +106,8 @@ VALUES
 (13, N"24531540-6", 59, N"Lo Espejo",    N"1744", N"154", 13, CAST(N"2022-04-28" As Date), 3, 23, 1),
 (14, N"13126204-8", 50, N"Vitacura", N"1485", N"598", 14, CAST(N"2011-12-15" As Date), 13, 1),
 (15, N"20623952-2", 46, N"Cerrillos", N"1691", N"851", 15, CAST(N"2021-05-13" As Date), 36, 1),
-(16, N"22893779-7", 32, N"La Reina", N"1326", N"194", 16, CAST(N"2012-10-22" As Date), 8, 1),
-(17, N"13280657-8", 40, N"La Reina", N"9241", N"427", 17, CAST(N"2015-01-19" As Date), 4, 1)
+(16, N"12893779-7", 32, N"La Reina", N"1326", N"194", 16, CAST(N"2015-10-22" As Date), 8, 1),
+(17, N"13280657-8", 40, N"La Reina", N"1326", N"194", 17, CAST(N"2015-01-19" As Date), 4, 1)
 GO
 SET IDENTITY_INSERT [dbo].[MultiOwner] OFF
 GO
