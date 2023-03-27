@@ -19,7 +19,7 @@ public partial class MultiOwner
 
     public int Sheets { get; set; }
 
-    public int InscriptionDate { get; set; }
+    public DateTime InscriptionDate { get; set; }
 
     public int InscriptionNumber { get; set; }
 
