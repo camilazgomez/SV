@@ -71,24 +71,32 @@ namespace SV.Controllers
               
                 for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
                 {
-                    System.Diagnostics.Debug.WriteLine("************");
-
-                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedClickedSeller"].Count);
-                    System.Diagnostics.Debug.WriteLine(Request.Form["uncreditedClickedSeller"][seller]);
-                    System.Diagnostics.Debug.WriteLine("************");
+      
                     Person newSeller = new();
                     newSeller.Rut = Request.Form["rutSeller"][seller]; 
                     newSeller.OwnershipPercentage= double.Parse(Request.Form["ownershipPercentageSeller"][seller]);
                     newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
-                   
-           
                     newSeller.Seller = true;
                     newSeller.Heir = false;
                     newSeller.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
                     _context.Add(newSeller);
                     await _context.SaveChangesAsync();
                 }
-                
+
+                for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
+                {
+
+                    Person newBuyer = new();
+                    newBuyer.Rut = Request.Form["rutBuyer"][buyer];
+                    newBuyer.OwnershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer]);
+                    newBuyer.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
+                    newBuyer.Seller = false;
+                    newBuyer.Heir = true;
+                    newBuyer.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
+                    _context.Add(newBuyer);
+                    await _context.SaveChangesAsync();
+                }
+
                 return RedirectToAction(nameof(Index));
             }
             return View(realStateForm);

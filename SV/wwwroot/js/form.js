@@ -36,11 +36,21 @@ form.addEventListener("submit", defineHiddenFieldState);
 function defineHiddenFieldState(event) {
     const allLastUncreditedOwnershipSellerInputs = document.querySelectorAll('[name="uncreditedOwnershipSeller"]');
     const allLastUncreditedOwnershipSellerHiddenFields = document.querySelectorAll('[name="uncreditedClickedSeller"]');
-    const lastUncreditedOwnershipSellersCount = allLastUncreditedOwnershipSellerInputs.length;
+   
     allLastUncreditedOwnershipSellerInputs.forEach(function (checkbox, indexOfCheckbox) {
         if (checkbox.checked) {
             allLastUncreditedOwnershipSellerHiddenFields[indexOfCheckbox].setAttribute("value", true); 
             
+        }
+    });
+
+    const allLastUncreditedOwnershipBuyerInputs = document.querySelectorAll('[name="uncreditedOwnershipBuyer"]');
+    const allLastUncreditedOwnershipBuyerHiddenFields = document.querySelectorAll('[name="uncreditedClickedBuyer"]');
+
+    allLastUncreditedOwnershipBuyerInputs.forEach(function (checkbox, indexOfCheckbox) {
+        if (checkbox.checked) {
+            allLastUncreditedOwnershipBuyerHiddenFields[indexOfCheckbox].setAttribute("value", true);
+
         }
     });
    
