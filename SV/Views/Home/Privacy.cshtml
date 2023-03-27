@@ -2,9 +2,10 @@
     ViewData["Title"] = "Consulta de Propietarios de un Predio";
 }
 
+
 <div class="container">
     <h1>@ViewData["Title"]</h1>
-    <form>
+    <form asp-action="MultiOwnerQuery" asp-controller="Home" method="post">
         <div class="form-group row">
             <div class="col-sm-10">
                 <input type="text" class="form-control" id="comuna" name="comuna" placeholder="Comuna">

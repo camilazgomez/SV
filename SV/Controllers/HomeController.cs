@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using SV.Models;
 using System.Diagnostics;
 
@@ -22,6 +23,19 @@ namespace SV.Controllers
         {
             return View();
         }
+
+        [HttpPost]
+        public IActionResult MultiOwnerQuery()
+        {
+            string commune = Request.Form["commune"];
+            string block = Request.Form["block"];
+            string property = Request.Form["property"];
+            int year = int.Parse(Request.Form["year"]);
+            System.Diagnostics.Debug.WriteLine(year);
+            return View();
+        }
+
+
 
 
 
