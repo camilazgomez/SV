@@ -91,23 +91,23 @@ INSERT [dbo].[MultiOwner] (
     [formsId]
 ) 
 VALUES 
-(1, N"21853297-1", 20, N"Las Condes", N"18829", N"129", 1, CAST(N"2014-11-24" As Date), 23, 1),
-(2, N"25797139-5", 90.4, N"Pudahuel", N"30105", N"57", 2, CAST(N"2013-05-26" As Date), 2, 1),
-(3, N"20476823-2", 46.4, N"Las Condes", N"18829", N"129", 3, CAST(N"2021-01-10" As Date), 3, 1),
-(4, N"15992415-1", 57, N"Providencia", N"44136", N"79", 4, CAST(N"2019-10-28" As Date), 4, 1),
-(5, N"18507947-9", 60, N"El Bosque", N"20011", N"202", 5, CAST(N"2018-08-01" As Date), 5, 1),
-(6, N"12841241-1", 62, N"La Cisterna", N"25926", N"125", 6, CAST(N"2019-04-19" As Date), 6, 1),
-(7, N"10419143-6", 62, N"Huechuraba", N"39058", N"179", 7, CAST(N"2013-07-07" As Date), 7, 1),
-(8, N"13008246-6", 62.4, N"Independencia", N"54765", N"225", 8, CAST(N"2020-12-24" As Date), 8, 1),
-(9, N"19995273-8", 59, N"Huechuraba", N"15333", N"47", 9, CAST(N"2011-11-07" As Date), 7 ,1),
-(10, N"20909215-0", 50.4, N"Providencia", N"58060", N"163", 10. CAST(N"2018-09-08" As Date), 8 , 1),
+(1, N'21853297-1', 20, N'Las Condes', N'18829', N'129', 1, CAST(N'2014-11-24' As Date), 23, 1),
+(2, N'25797139-5', 90.4, N'Pudahuel', N'30105', N'57', 2, CAST(N'2013-05-26' As Date), 2, 1),
+(3, N'20476823-2', 46.4, N'Las Condes', N'18829', N'129', 3, CAST(N'2021-01-10' As Date), 3, 1),
+(4, N'15992415-1', 57, N'Providencia', N'44136', N'79', 4, CAST(N'2019-10-28' As Date), 4, 1),
+(5, N'18507947-9', 60, N'El Bosque', N'20011', N'202', 5, CAST(N'2018-08-01' As Date), 5, 1),
+(6, N'12841241-1', 62, N'La Cisterna', N'25926', N'125', 6, CAST(N'2019-04-19' As Date), 6, 1),
+(7, N'10419143-6', 62, N'Huechuraba', N'39058', N'179', 7, CAST(N'2013-07-07' As Date), 7, 1),
+(8, N'13008246-6', 62.4, N'Independencia', N'54765', N'225', 8, CAST(N'2020-12-24' As Date), 8, 1),
+(9, N'19995273-8', 59, N'Huechuraba', N'15333', N'47', 9, CAST(N'2011-11-07' As Date), 7 ,1),
+(10, N'20909215-0', 50.4, N'Providencia', N'58060', N'163', 10. CAST(N'2018-09-08' As Date), 8 , 1),
 (11, N'10915348-6', 90.4, N'Las Condes', N'200', N'200', 11,CAST(N'1982-01-15' AS Date), 1, 1),
 (12, N'20457896-6', 50.4, N'Vitacura', N'200', N'200', 12,CAST(N'1982-01-15' AS Date), 2, 1),
-(13, N"24531540-6", 59, N"Lo Espejo",    N"1744", N"154", 13, CAST(N"2022-04-28" As Date), 3, 23, 1),
-(14, N"13126204-8", 50, N"Vitacura", N"1485", N"598", 14, CAST(N"2011-12-15" As Date), 13, 1),
-(15, N"20623952-2", 46, N"Cerrillos", N"1691", N"851", 15, CAST(N"2021-05-13" As Date), 36, 1),
-(16, N"12893779-7", 32, N"La Reina", N"1326", N"194", 16, CAST(N"2015-10-22" As Date), 8, 1),
-(17, N"13280657-8", 40, N"La Reina", N"1326", N"194", 17, CAST(N"2015-01-19" As Date), 4, 1)
+(13, N'24531540-6', 59, N'Lo Espejo',    N'1744', N'154', 13, CAST(N'2022-04-28' As Date), 3, 23, 1),
+(14, N'13126204-8', 50, N'Vitacura', N'1485', N'598', 14, CAST(N'2011-12-15' As Date), 13, 1),
+(15, N'20623952-2', 46, N'Cerrillos', N'1691', N'851', 15, CAST(N'2021-05-13' As Date), 36, 1),
+(16, N'12893779-7', 32, N'La Reina', N'1326', N'194', 16, CAST(N'2015-10-22' As Date), 8, 1),
+(17, N'13280657-8', 40, N'La Reina', N'1326', N'194', 17, CAST(N'2015-01-19' As Date), 4, 1)
 GO
 SET IDENTITY_INSERT [dbo].[MultiOwner] OFF
 GO
