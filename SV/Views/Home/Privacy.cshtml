@@ -1,9 +1,9 @@
 ﻿@{
-    ViewData["Title"] = "Privacy Policy";
+    ViewData["Title"] = "Consulta de Propietarios de un Predio";
 }
 
 <div class="container">
-    <h1>Consulta de Propietarios de un Predio</h1>
+    <h1>@ViewData["Title"]</h1>
     <form>
         <div class="form-group row">
             <div class="col-sm-10">
@@ -24,18 +24,5 @@
     </form>
 </div>
 
-<script type="text/javascript">
-    // Seleccionamos el elemento "select" del campo de años
-    var yearSelect = document.getElementById("year");
 
-    // Obtenemos el año actual
-    var currentYear = new Date().getFullYear();
-
-    // Agregamos opciones al select para los años desde 2023 hasta 1900
-    for (var i = currentYear; i >= 1900; i--) {
-        var option = document.createElement("option");
-        option.value = i;
-        option.text = i;
-        yearSelect.add(option);
-    }
-</script>
+<script src="~/js/multiowner.js" asp-append-version="true"></script>
