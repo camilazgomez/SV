@@ -24,10 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="NewFolder1\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="wwwroot\js\multiowner.js" />
   </ItemGroup>
 
