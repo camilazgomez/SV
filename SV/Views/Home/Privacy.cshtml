@@ -28,10 +28,8 @@
         </div>
     </form>
 </div>
-
-
-        
-@{
+    
+    @{
         if (Model != null)
             {
         foreach (var item in Model)
@@ -44,7 +42,7 @@
                             RUT
                         </th>
                         <th>
-                            % de Derechos
+                            % de Derecho
                         </th>
                         <th>
                             Fojas
@@ -75,7 +73,7 @@
                             @Html.DisplayFor(modelItem => item.InscriptionNumber)
                         </td>
                         <td>
-                            @Html.DisplayFor(modelItem => item.Year)
+                            @Html.DisplayFor(modelItem => item.validityYearBegin)
                         </td>
                         <td>
                             @Html.DisplayFor(modelItem => item.InscriptionDate)

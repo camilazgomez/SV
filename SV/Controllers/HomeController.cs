@@ -41,7 +41,8 @@ namespace SV.Controllers
 
             return _context.MultiOwners != null ?
 
-                          View(await _context.MultiOwners.ToListAsync()) :
+                          
+                          View( _context.MultiOwners.Where(s=> s.Commune == comuna && s.Block == manzana &&  s.Property == predio)):
                           Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
            
         }

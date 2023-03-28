@@ -25,6 +25,10 @@ public partial class MultiOwner
 
     public int Year { get; set; }
 
+    public int validityYearBegin { get; set; }
+
+    public int validityYearFinish { get; set; }
+
     public int? FormsId { get; set; }
 
     public virtual RealStateForm? Forms { get; set; }

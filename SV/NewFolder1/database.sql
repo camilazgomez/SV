@@ -43,7 +43,8 @@ CREATE TABLE [dbo].[MultiOwner] (
     [inscriptionDate]     DATE          NOT NULL,
     [inscriptionNumber]   INT           NOT NULL,
     [formsId]             INT           NULL,
-    [year]             INT           NULL,
+    [validityYearBegin]             INT           NULL,
+    [validityYearFinish]             INT           NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC),
     CONSTRAINT [FK_MultiOwner_(ToTableColumn)] FOREIGN KEY ([formsId]) REFERENCES [dbo].[RealStateForm] ([attentionNumber])
 );
@@ -90,7 +91,8 @@ INSERT [dbo].[MultiOwner] (
     [inscriptionDate],
     [inscriptionNumber], 
     [formsId],
-    [year]
+    [validityYearBegin],
+    [validityYearFinish]
 ) 
 VALUES 
 (1, N'21853297-1', 20, N'Las Condes', N'18829', N'129', 1, CAST(N'2014-11-24' As Date), 23, 1, 2014),
