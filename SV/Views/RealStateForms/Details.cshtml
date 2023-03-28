@@ -1,4 +1,4 @@
-﻿@model SV.Models.RealStateForm
+﻿@model SV.Models.expandedDetailsOfForms
 
 @{
     ViewData["Title"] = "Detalles";
@@ -7,50 +7,50 @@
 <h1>@ViewData["Title"]</h1>
 
 <div>
-    <h4>Formulario de Bienes Raíces  |  N° de Atención: @Html.DisplayFor(model => model.AttentionNumber)</h4>
+    <h4>Formulario de Bienes Raíces  |  N° de Atención: @Html.DisplayFor(model => model.realStateForm.AttentionNumber)</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
             CNE
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.NatureOfTheDeed)
+            @Html.DisplayFor(model => model.realStateForm.NatureOfTheDeed)
         </dd>
         <dt class = "col-sm-2">
            Comuna
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Commune)
+            @Html.DisplayFor(model => model.realStateForm.Commune)
         </dd>
         <dt class = "col-sm-2">
             Manzana
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Block)
+            @Html.DisplayFor(model => model.realStateForm.Block)
         </dd>
         <dt class = "col-sm-2">
             Predio
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Property)
+            @Html.DisplayFor(model => model.realStateForm.Property)
         </dd>
         <dt class = "col-sm-2">
             Fojas
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Sheets)
+            @Html.DisplayFor(model => model.realStateForm.Sheets)
         </dd>
         <dt class = "col-sm-2">
             Fecha Inscripción
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InscriptionDate)
+            @Html.DisplayFor(model => model.realStateForm.InscriptionDate)
         </dd>
         <dt class = "col-sm-2">
             Número Inscripción
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.InscriptionNumber)
+            @Html.DisplayFor(model => model.realStateForm.InscriptionNumber)
         </dd>
     </dl>
 </div>
@@ -68,14 +68,18 @@
             </tr>
         </thead>
         <tbody>
+            @foreach (var item in Model.Sellers)
+
+                {
             <tr>
                 <td>
-                    algo
+                        @Html.DisplayFor(modelItem => item.Rut)
                 </td>
                 <td>
-                    algo
+                        @Html.DisplayFor(modelItem => item.OwnershipPercentage)
                 </td>
             </tr>
+                }
         </tbody>
     </table>
 </div>
@@ -93,18 +97,22 @@
             </tr>
         </thead>
         <tbody>
+            @foreach (var item in Model.Buyers)
+
+                {
             <tr>
                 <td>
-                    algo
+                        @Html.DisplayFor(modelItem => item.Rut)
                 </td>
                 <td>
-                    algo
+                        @Html.DisplayFor(modelItem => item.OwnershipPercentage)
                 </td>
             </tr>
+                }
         </tbody>
     </table>
 </div>
 <div>
-    <!--<a asp-action="Edit" asp-route-id="@Model?.AttentionNumber">Edit</a> |-->
+
     <a asp-action="Index">Volver a Formularios</a>
 </div>

@@ -11,6 +11,7 @@ using NuGet.Protocol.Plugins;
 using SV.Models;
 using static System.Net.Mime.MediaTypeNames;
 
+
 namespace SV.Controllers
 {
     public class RealStateFormsController : Controller
@@ -33,6 +34,8 @@ namespace SV.Controllers
         // GET: RealStateForms/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+
+         
             if (id == null || _context.RealStateForms == null)
             {
                 return NotFound();
@@ -44,8 +47,11 @@ namespace SV.Controllers
             {
                 return NotFound();
             }
-
-            return View(realStateForm);
+            expandedDetailsOfForms viewData = new();
+            viewData.Sellers = _context.People.Where(s=> s.FormsId == id && s.Seller == true).ToList();
+            viewData.Buyers = _context.People.Where(s => s.FormsId == id && s.Seller == false).ToList();
+            viewData.realStateForm = realStateForm;
+            return View(viewData);
         }
 
         // GET: RealStateForms/Create
@@ -287,3 +293,4 @@ namespace SV.Controllers
         }
     }
 }
+
