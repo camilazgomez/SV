@@ -22,13 +22,21 @@ namespace SV.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Privacy()
+        public async Task<IActionResult> Privacy(string comuna, string manzana, string predio, string year )
            
         {
-      
+            System.Diagnostics.Debug.WriteLine("*****");
+            System.Diagnostics.Debug.WriteLine(comuna);
+            System.Diagnostics.Debug.WriteLine("*****");
             if (_context.MultiOwners == null)
             {
                 return RedirectToAction("index", "RealStateForm");
+            }
+
+            if (String.IsNullOrEmpty(comuna) || String.IsNullOrEmpty(manzana) || String.IsNullOrEmpty(predio))
+            {
+                return View(); 
+                
             }
 
             return _context.MultiOwners != null ?
