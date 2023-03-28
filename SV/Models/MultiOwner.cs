@@ -23,6 +23,8 @@ public partial class MultiOwner
 
     public int InscriptionNumber { get; set; }
 
+    public int Year { get; set; }
+
     public int? FormsId { get; set; }
 
     public virtual RealStateForm? Forms { get; set; }
