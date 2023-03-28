@@ -22,7 +22,7 @@ namespace SV.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Privacy(string comuna, string manzana, string predio, string year )
+        public async Task<IActionResult> MultiOwnerQuery(string comuna, string manzana, string predio, string year )
            
         {
             System.Diagnostics.Debug.WriteLine("*****");
