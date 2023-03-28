@@ -22,17 +22,13 @@ namespace SV.Controllers
             return View();
         }
 
-        public async Task<IActionResult> Privacy(string commune, string block, string property, int year)
+        public async Task<IActionResult> Privacy()
            
         {
-            ViewData["CurrentCommune"] = commune;
-            ViewData["CurrentBlock"] = block;
-            ViewData["CurrentProperty"] = property;
-            ViewData["Year"] = year;
-            System.Diagnostics.Debug.WriteLine(ViewData["Year"]);
+      
             if (_context.MultiOwners == null)
             {
-                return View();
+                return RedirectToAction("index", "RealStateForm");
             }
 
             return _context.MultiOwners != null ?

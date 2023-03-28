@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Consulta de Propietarios de un Predio";
 }
+@model IEnumerable<SV.Models.MultiOwner>
 
 
 <div class="container">
@@ -24,6 +25,58 @@
         <button type="submit" class="btn btn-primary">Enviar</button>
     </form>
 </div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                RUT
+            </th>
+            <th>
+               % de Derechos
+            </th>
+            <th>
+               Fojas
+            </th>
+            <th>
+                Nº de Inscripción
+            </th>
+            <th>
+                Año
+            </th>
+            <th>
+                Fecha de Inscripción
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Rut)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.OwnershipPercentage)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Sheets)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.InscriptionNumber)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.InscriptionDate.Date)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.InscriptionDate)
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+
 
 
 <script src="~/js/multiowner.js" asp-append-version="true"></script>
