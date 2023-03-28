@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Azure;
@@ -88,7 +89,7 @@ namespace SV.Controllers
                         }
                         else
                         {
-                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageSeller"][seller]);
+                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageSeller"][seller], CultureInfo.InvariantCulture);
                             checkOwnershipPercentage(ownershipPercentage);
                         }
 
@@ -139,7 +140,7 @@ namespace SV.Controllers
                         }
                         else
                         {
-                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer]);
+                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer], CultureInfo.InvariantCulture);
                             checkOwnershipPercentage(ownershipPercentage);
                         }
 
