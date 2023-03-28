@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Plugins;
 using SV.Models;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -71,30 +72,100 @@ namespace SV.Controllers
               
                 for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
                 {
-      
-                    Person newSeller = new();
-                    newSeller.Rut = Request.Form["rutSeller"][seller]; 
-                    newSeller.OwnershipPercentage= double.Parse(Request.Form["ownershipPercentageSeller"][seller]);
-                    newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
-                    newSeller.Seller = true;
-                    newSeller.Heir = false;
-                    newSeller.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
-                    _context.Add(newSeller);
-                    await _context.SaveChangesAsync();
+                    try
+                    {
+                        double? ownershipPercentage;
+                        checkRut(Request.Form["rutSeller"][seller]);
+                        if (Request.Form["ownershipPercentageSeller"][seller] == null)
+                        {
+                            ownershipPercentage = null;
+                        }
+                        else
+                        {
+                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageSeller"][seller]);
+                            checkOwnershipPercentage(ownershipPercentage);
+                        }
+
+                        Person newSeller = new();
+                        newSeller.Rut = Request.Form["rutSeller"][seller];
+                        newSeller.OwnershipPercentage= ownershipPercentage;
+                        newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
+                        newSeller.Seller = true;
+                        newSeller.Heir = false;
+                        newSeller.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
+                        _context.Add(newSeller);
+                        await _context.SaveChangesAsync();
+
+
+                    }
+                    // Most specific:
+                    catch (ArgumentNullException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                        System.Diagnostics.Debug.WriteLine("{0} First exception caught.", e);
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                    }
+                    // Least specific:
+                    catch (FormatException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                        System.Diagnostics.Debug.WriteLine("{0} Second exception caught.", e);
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                    }
+                    catch (ArithmeticException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                        System.Diagnostics.Debug.WriteLine("{0} Third exception caught.", e);
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                    }
+
                 }
 
                 for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
                 {
+                    try
+                    {
+                        double? ownershipPercentage;
+                        checkRut(Request.Form["rutBuyer"][buyer]);
+                        if (Request.Form["ownershipPercentageSeller"][buyer] == null)
+                        {
+                            ownershipPercentage = null;
+                        }
+                        else
+                        {
+                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer]);
+                            checkOwnershipPercentage(ownershipPercentage);
+                        }
 
-                    Person newBuyer = new();
-                    newBuyer.Rut = Request.Form["rutBuyer"][buyer];
-                    newBuyer.OwnershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer]);
-                    newBuyer.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
-                    newBuyer.Seller = false;
-                    newBuyer.Heir = true;
-                    newBuyer.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
-                    _context.Add(newBuyer);
-                    await _context.SaveChangesAsync();
+                        Person newBuyer = new();
+                        newBuyer.Rut = Request.Form["rutBuyer"][buyer];
+                        newBuyer.OwnershipPercentage = ownershipPercentage;
+                        newBuyer.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
+                        newBuyer.Seller = false;
+                        newBuyer.Heir = true;
+                        newBuyer.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
+                        _context.Add(newBuyer);
+                        await _context.SaveChangesAsync();
+                    }
+                    catch (ArgumentNullException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                        System.Diagnostics.Debug.WriteLine("{0} First exception caught.", e);
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                    }
+                    // Least specific:
+                    catch (FormatException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                        System.Diagnostics.Debug.WriteLine("{0} Second exception caught.", e);
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                    }
+                    catch (ArithmeticException e)
+                    {
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                        System.Diagnostics.Debug.WriteLine("{0} Third exception caught.", e);
+                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                    }
                 }
 
                 return RedirectToAction(nameof(Index));
@@ -193,6 +264,26 @@ namespace SV.Controllers
         private bool RealStateFormExists(int id)
         {
           return (_context.RealStateForms?.Any(e => e.AttentionNumber == id)).GetValueOrDefault();
+        }
+
+        static void checkRut(string rut)
+        {
+            if (rut == "")
+            {
+                throw new ArgumentNullException(paramName: nameof(rut), message: "Parameter can't be null");
+            }
+        }
+
+        static void checkOwnershipPercentage(double? ownershipPercentage)
+        {
+            if (ownershipPercentage < 0)
+            {
+                throw new ArithmeticException("Percentage must be greater than 0");
+            }
+            else if (ownershipPercentage > 100)
+            {
+                throw new ArithmeticException("Percentage must be lower than 100");
+            }
         }
     }
 }
