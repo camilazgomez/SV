@@ -32,9 +32,7 @@
     @{
         if (Model != null)
             {
-        foreach (var item in Model)
-
-        {
+        
             <table class="table">
                 <thead>
                     <tr>
@@ -59,6 +57,9 @@
                     </tr>
                 </thead>
                 <tbody>
+                @foreach (var item in Model)
+
+                {
                     <tr>
                         <td>
                             @Html.DisplayFor(modelItem => item.Rut)
@@ -79,9 +80,10 @@
                             @Html.DisplayFor(modelItem => item.InscriptionDate)
                         </td>
                     </tr>
+                }
                 </tbody>
             </table>
-                }
+               
             }
             
         }
