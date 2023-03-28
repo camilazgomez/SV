@@ -38,27 +38,17 @@ namespace SV.Controllers
                 return View(); 
                 
             }
+            int yearFormatted = int.Parse(year);
 
             return _context.MultiOwners != null ?
 
                           
-                          View( _context.MultiOwners.Where(s=> s.Commune == comuna && s.Block == manzana &&  s.Property == predio)):
+                          View( _context.MultiOwners.Where(s=> s.Commune == comuna && s.Block == manzana &&  s.Property == predio && s.validityYearBegin <= yearFormatted && (s.validityYearFinish == null || s.validityYearFinish >= yearFormatted))):
                           Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
            
         }
 
-        [HttpPost]
-        public IActionResult MultiOwnerQuery()
-        {
-            string commune = Request.Form["commune"];
-            string block = Request.Form["block"];
-            string property = Request.Form["property"];
-            int year = int.Parse(Request.Form["year"]);
-            System.Diagnostics.Debug.WriteLine(year);
-            return View();
-        }
-
-
+      
 
 
 
