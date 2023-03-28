@@ -11,3 +11,13 @@ for (var i = currentYear; i >= 1900; i--) {
     option.text = i;
     yearSelect.add(option);
 }
+
+const eraseFilterBtn = document.querySelector("#eraseFilterBtn");
+
+eraseFilterBtn.addEventListener("click", hideTable);
+
+function hideTable() {
+    if (!document.querySelector(".table").classList.value.includes('is-hidden')) {
+        document.querySelector(".table").classList.toggle("is-hidden");
+    }
+}
