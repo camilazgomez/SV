@@ -7,11 +7,14 @@
 <h1>@ViewData["Title"]</h1>
 
 <h4>RealStateForm</h4>
+
+
 <hr />
 <div class="row">
     <div class="col">
         <form asp-action="Create" id="form">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            
             <div class="form-group">
                 <label asp-for="NatureOfTheDeed" class="control-label">CNE</label>
                 <select id="NatureOfTheDeed" name="NatureOfTheDeed">
@@ -22,7 +25,24 @@
             </div>
             <div class="form-group">
                 <label asp-for="Commune" class="control-label">Comuna</label>
-                <input asp-for="Commune" class="form-control" />
+                <select id="Commune" name="Commune">
+                    @{
+                        int counterOfCommunes = 0;
+                        @foreach (var commune in ViewBag.Communes)
+                        {
+                            if (counterOfCommunes == 0)
+                            {
+                                <option selected="selected">@commune.Name</option>
+                                counterOfCommunes += 1;
+                            }
+                            else
+                            {
+                                <option>@commune.Name</option>
+                            }
+
+                        }
+                }
+                </select>
                 <span asp-validation-for="Commune" class="text-danger"></span>
             </div>
             <div class="form-group">

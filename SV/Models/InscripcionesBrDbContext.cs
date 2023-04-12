@@ -21,6 +21,8 @@ public partial class InscripcionesBrDbContext : DbContext
 
     public virtual DbSet<Persona> Personas { get; set; }
 
+    public virtual DbSet<Commune> Commune{ get; set; }
+
     public virtual DbSet<RealStateForm> RealStateForms { get; set; }
 
  //   protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -91,6 +93,16 @@ public partial class InscripcionesBrDbContext : DbContext
             entity.Property(e => e.FechaNacimiento).HasColumnType("date");
             entity.Property(e => e.Nombre).HasMaxLength(50);
             entity.Property(e => e.Rut).HasMaxLength(10);
+        });
+
+        modelBuilder.Entity<Commune>(entity =>
+        {
+            entity.ToTable("Commune");
+            entity.Property(e => e.Id).HasColumnName("Id");
+            entity.Property(e => e.Name)
+                .HasMaxLength(50)
+                .IsFixedLength()
+                .HasColumnName("Name");
         });
 
         modelBuilder.Entity<RealStateForm>(entity =>

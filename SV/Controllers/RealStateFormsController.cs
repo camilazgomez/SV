@@ -58,6 +58,8 @@ namespace SV.Controllers
         // GET: RealStateForms/Create
         public IActionResult Create()
         {
+            ViewBag.Communes = _context.Commune.ToList();
+            
             return View();
         }
 
@@ -71,6 +73,9 @@ namespace SV.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AttentionNumber,NatureOfTheDeed,Commune,Block,Property,Sheets,InscriptionDate,InscriptionNumber")] RealStateForm realStateForm)
         {
+            System.Diagnostics.Debug.WriteLine("WIIIIII");
+            System.Diagnostics.Debug.WriteLine(Request.Form["Commune"]);
+
             if (ModelState.IsValid)
             {
                 _context.Add(realStateForm);
@@ -177,6 +182,7 @@ namespace SV.Controllers
 
                 return RedirectToAction(nameof(Index));
             }
+            ViewBag.Communes = _context.Commune.ToList();
             return View(realStateForm);
         }
         
