@@ -43,7 +43,6 @@ public partial class InscripcionesBrDbContext : DbContext
             entity.Property(e => e.Commune)
                 .IsUnicode(false)
                 .HasColumnName("commune");
-            entity.Property(e => e.FormsId).HasColumnName("formsId");
             entity.Property(e => e.InscriptionDate).HasColumnName("inscriptionDate");
             entity.Property(e => e.InscriptionNumber).HasColumnName("inscriptionNumber");
             entity.Property(e => e.OwnershipPercentage).HasColumnName("ownershipPercentage");
@@ -56,9 +55,6 @@ public partial class InscripcionesBrDbContext : DbContext
                 .HasColumnName("rut");
             entity.Property(e => e.Sheets).HasColumnName("sheets");
 
-            entity.HasOne(d => d.Forms).WithMany(p => p.MultiOwners)
-                .HasForeignKey(d => d.FormsId)
-                .HasConstraintName("FK_MultiOwner_(ToTableColumn)");
         });
 
         modelBuilder.Entity<Person>(entity =>
@@ -97,7 +93,7 @@ public partial class InscripcionesBrDbContext : DbContext
 
         modelBuilder.Entity<Commune>(entity =>
         {
-            entity.ToTable("Commune");
+            entity.ToTable("Communes");
             entity.Property(e => e.Id).HasColumnName("Id");
             entity.Property(e => e.Name)
                 .HasMaxLength(50)
