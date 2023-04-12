@@ -73,8 +73,6 @@ namespace SV.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AttentionNumber,NatureOfTheDeed,Commune,Block,Property,Sheets,InscriptionDate,InscriptionNumber")] RealStateForm realStateForm)
         {
-            System.Diagnostics.Debug.WriteLine("WIIIIII");
-            System.Diagnostics.Debug.WriteLine(Request.Form["Commune"]);
 
             if (ModelState.IsValid)
             {
