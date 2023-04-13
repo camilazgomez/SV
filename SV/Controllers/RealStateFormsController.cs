@@ -306,22 +306,30 @@ namespace SV.Controllers
         {
             RealStateForm currentForm = getLastFormsRecord(_context);
             bool addToTable = true;
+            int adjustedYear = adjustYear(currentForm.InscriptionDate.Year);
+
             if (checkYearAlreadyExists(currentForm,_context))
             {
-                System.Diagnostics.Debug.WriteLine("Deberíamos chequear num de inscripción entonces");
-                List<MultiOwner> latestMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber).ToList();
+                
+                List<MultiOwner> latestMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber &&
+                                             multiowner.validityYearBegin == adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
+                                                 multiowner.Property == currentForm.Property).ToList();
                 System.Diagnostics.Debug.WriteLine(latestMultiOwners.Count());
-                if (latestMultiOwners.Count() > 0)
+
+                if (latestMultiOwners.Count() >= 0)
                 {
                     _context.MultiOwners.RemoveRange(latestMultiOwners);
                 }
-                else { addToTable = false; }
+                else { 
+                    addToTable = false; 
+                }
             }
             if (addToTable)
             {
-                System.Diagnostics.Debug.WriteLine("Deberíamos crearlo entonces");
                 List<Person> buyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false).ToList();
-                MultiOwner ? nextBuyer = _context.MultiOwners.Where(multiowner => multiowner.validityYearBegin > currentForm.InscriptionDate.Year)
+                MultiOwner ? nextBuyer = _context.MultiOwners.Where(multiowner => multiowner.validityYearBegin > adjustedYear &&
+                                        multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
+                                        multiowner.Property == currentForm.Property)
                     .OrderBy(tableKey => tableKey.validityYearBegin).LastOrDefault();
                 foreach (var buyer in buyers)
                 {
@@ -329,7 +337,7 @@ namespace SV.Controllers
                     newMultiOwner.Rut = buyer.Rut;
                     newMultiOwner.Sheets = currentForm.Sheets;
                     newMultiOwner.OwnershipPercentage = buyer.OwnershipPercentage;
-                    newMultiOwner.validityYearBegin = currentForm.InscriptionDate.Year;
+                    newMultiOwner.validityYearBegin = adjustedYear;
                     newMultiOwner.Commune = currentForm.Commune;
                     newMultiOwner.Block = currentForm.Block;
                     newMultiOwner.Property = currentForm.Property;
@@ -351,10 +359,11 @@ namespace SV.Controllers
 
                 // constante magica arreglar
                 List<MultiOwner> previousMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.validityYearFinish == 0
-                && multiowner.validityYearBegin < currentForm.InscriptionDate.Year).ToList();
+                                                && multiowner.validityYearBegin < adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
+                                                 multiowner.Property == currentForm.Property).ToList();
                 foreach (var previousMultiOwner  in previousMultiOwners)
                 {
-                    previousMultiOwner.validityYearFinish = currentForm.InscriptionDate.Year - 1;
+                    previousMultiOwner.validityYearFinish = adjustedYear - 1;
                     _context.Update(previousMultiOwner);
                     await _context.SaveChangesAsync();
                 }
@@ -368,16 +377,25 @@ namespace SV.Controllers
 
         static bool checkYearAlreadyExists(RealStateForm realStateForm, InscripcionesBrDbContext _context)
         {
-            int year = realStateForm.InscriptionDate.Year;
+            int year = adjustYear(realStateForm.InscriptionDate.Year);  
             System.Diagnostics.Debug.WriteLine(year);
             List<MultiOwner> multiOwnersOfGivenYear = _context.MultiOwners.Where(multiowner => multiowner.InscriptionDate.Year == year &&
                                                  multiowner.Block == realStateForm.Block && multiowner.Commune == realStateForm.Commune &&
                                                  multiowner.Property == realStateForm.Property).ToList();
-            if (multiOwnersOfGivenYear.Any())
+            if (multiOwnersOfGivenYear.Count()>=0)
             {
                 return true;
             }
             return false;
+        }
+
+        static int adjustYear(int year)
+        {
+            int adjustedYear = year;
+            if (year < 2019) {
+                adjustedYear = 2019;
+            }
+            return adjustedYear;
         }
     }
 }
