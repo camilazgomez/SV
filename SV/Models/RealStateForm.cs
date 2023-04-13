@@ -21,7 +21,5 @@ public partial class RealStateForm
 
     public int InscriptionNumber { get; set; }
 
-    public virtual ICollection<MultiOwner> MultiOwners { get; } = new List<MultiOwner>();
-
     public virtual ICollection<Person> People { get; } = new List<Person>();
 }

@@ -7,6 +7,7 @@ using Azure;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.EntityFrameworkCore;
 using NuGet.Protocol.Plugins;
 using SV.Models;
@@ -102,7 +103,7 @@ namespace SV.Controllers
                         newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
                         newSeller.Seller = true;
                         newSeller.Heir = false;
-                        newSeller.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
+                        newSeller.FormsId = getLastFormsRecord(_context).AttentionNumber;
                         _context.Add(newSeller);
                         await _context.SaveChangesAsync();
 
@@ -133,11 +134,13 @@ namespace SV.Controllers
 
                 for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
                 {
+                    System.Diagnostics.Debug.WriteLine(Request.Form["rutBuyer"].Count);
+                    System.Diagnostics.Debug.WriteLine(buyer);
                     try
                     {
                         double? ownershipPercentage;
                         checkRut(Request.Form["rutBuyer"][buyer]);
-                        if (Request.Form["ownershipPercentageSeller"][buyer] == null)
+                        if (Request.Form["ownershipPercentageBuyer"][buyer] == null)
                         {
                             ownershipPercentage = null;
                         }
@@ -153,7 +156,7 @@ namespace SV.Controllers
                         newBuyer.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
                         newBuyer.Seller = false;
                         newBuyer.Heir = true;
-                        newBuyer.FormsId = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault().AttentionNumber;
+                        newBuyer.FormsId = getLastFormsRecord(_context).AttentionNumber;
                         _context.Add(newBuyer);
                         await _context.SaveChangesAsync();
                     }
@@ -178,6 +181,8 @@ namespace SV.Controllers
                     }
                 }
 
+
+                await multiOwnerTableUpdate(_context);
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.Communes = _context.Commune.ToList();
@@ -295,6 +300,84 @@ namespace SV.Controllers
             {
                 throw new ArithmeticException("Percentage must be lower than 100");
             }
+        }
+
+        static async Task multiOwnerTableUpdate(InscripcionesBrDbContext _context)
+        {
+            RealStateForm currentForm = getLastFormsRecord(_context);
+            bool addToTable = true;
+            if (checkYearAlreadyExists(currentForm,_context))
+            {
+                System.Diagnostics.Debug.WriteLine("Deberíamos chequear num de inscripción entonces");
+                List<MultiOwner> latestMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber).ToList();
+                System.Diagnostics.Debug.WriteLine(latestMultiOwners.Count());
+                if (latestMultiOwners.Count() > 0)
+                {
+                    _context.MultiOwners.RemoveRange(latestMultiOwners);
+                }
+                else { addToTable = false; }
+            }
+            if (addToTable)
+            {
+                System.Diagnostics.Debug.WriteLine("Deberíamos crearlo entonces");
+                List<Person> buyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false).ToList();
+                MultiOwner ? nextBuyer = _context.MultiOwners.Where(multiowner => multiowner.validityYearBegin > currentForm.InscriptionDate.Year)
+                    .OrderBy(tableKey => tableKey.validityYearBegin).LastOrDefault();
+                foreach (var buyer in buyers)
+                {
+                    MultiOwner newMultiOwner = new MultiOwner();
+                    newMultiOwner.Rut = buyer.Rut;
+                    newMultiOwner.Sheets = currentForm.Sheets;
+                    newMultiOwner.OwnershipPercentage = buyer.OwnershipPercentage;
+                    newMultiOwner.validityYearBegin = currentForm.InscriptionDate.Year;
+                    newMultiOwner.Commune = currentForm.Commune;
+                    newMultiOwner.Block = currentForm.Block;
+                    newMultiOwner.Property = currentForm.Property;
+                    newMultiOwner.InscriptionDate = currentForm.InscriptionDate;
+                    newMultiOwner.InscriptionNumber = currentForm.InscriptionNumber;
+                    if (nextBuyer != null)
+                    {
+                        newMultiOwner.validityYearFinish = nextBuyer.validityYearBegin - 1;
+                        _context.Add(newMultiOwner);
+                       
+                    }
+                    else { 
+                        // constante magica arreglar
+                        newMultiOwner.validityYearFinish = 0;
+                        _context.Add(newMultiOwner);
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                // constante magica arreglar
+                List<MultiOwner> previousMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.validityYearFinish == 0
+                && multiowner.validityYearBegin < currentForm.InscriptionDate.Year).ToList();
+                foreach (var previousMultiOwner  in previousMultiOwners)
+                {
+                    previousMultiOwner.validityYearFinish = currentForm.InscriptionDate.Year - 1;
+                    _context.Update(previousMultiOwner);
+                    await _context.SaveChangesAsync();
+                }
+            }
+        }
+
+        static RealStateForm getLastFormsRecord(InscripcionesBrDbContext _context)
+        {
+           return  _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
+        }
+
+        static bool checkYearAlreadyExists(RealStateForm realStateForm, InscripcionesBrDbContext _context)
+        {
+            int year = realStateForm.InscriptionDate.Year;
+            System.Diagnostics.Debug.WriteLine(year);
+            List<MultiOwner> multiOwnersOfGivenYear = _context.MultiOwners.Where(multiowner => multiowner.InscriptionDate.Year == year &&
+                                                 multiowner.Block == realStateForm.Block && multiowner.Commune == realStateForm.Commune &&
+                                                 multiowner.Property == realStateForm.Property).ToList();
+            if (multiOwnersOfGivenYear.Any())
+            {
+                return true;
+            }
+            return false;
         }
     }
 }
