@@ -2,8 +2,8 @@
 {
     public class CreateFormsViewData
     {
-        public List<Commune> communes { get; set; }
+        public List<Commune> Communes { get; set; }
 
-        public RealStateForm realStateForm { get; set; }
+        public RealStateForm RealStateForm { get; set; }
     }
 }

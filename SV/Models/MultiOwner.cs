@@ -24,8 +24,8 @@ public partial class MultiOwner
     public int InscriptionNumber { get; set; }
 
 
-    public int validityYearBegin { get; set; }
+    public int ValidityYearBegin { get; set; }
 
-    public int? validityYearFinish { get; set; }
+    public int? ValidityYearFinish { get; set; }
 
 }

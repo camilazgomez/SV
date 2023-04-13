@@ -54,6 +54,8 @@ public partial class InscripcionesBrDbContext : DbContext
                 .IsFixedLength()
                 .HasColumnName("rut");
             entity.Property(e => e.Sheets).HasColumnName("sheets");
+            entity.Property(e => e.ValidityYearBegin).HasColumnName("validityYearBegin");
+            entity.Property(e => e.ValidityYearFinish).HasColumnName("validityYearFinish");
 
         });
 

@@ -22,18 +22,18 @@ namespace SV.Controllers
             return View();
         }
 
-        public async Task<IActionResult> MultiOwnerQuery(string comuna, string manzana, string predio, string year )
+        public async Task<IActionResult> MultiOwnerQuery(string commune, string block, string property, string year )
            
         {
             System.Diagnostics.Debug.WriteLine("*****");
-            System.Diagnostics.Debug.WriteLine(comuna);
+            System.Diagnostics.Debug.WriteLine(commune);
             System.Diagnostics.Debug.WriteLine("*****");
             if (_context.MultiOwners == null)
             {
                 return RedirectToAction("index", "RealStateForm");
             }
 
-            if (String.IsNullOrEmpty(comuna) || String.IsNullOrEmpty(manzana) || String.IsNullOrEmpty(predio))
+            if (String.IsNullOrEmpty(commune) || String.IsNullOrEmpty(block) || String.IsNullOrEmpty(property))
             {
                 return View(); 
                 
@@ -43,7 +43,7 @@ namespace SV.Controllers
             return _context.MultiOwners != null ?
 
                           
-                          View( _context.MultiOwners.Where(s=> s.Commune == comuna && s.Block == manzana &&  s.Property == predio && s.validityYearBegin <= yearFormatted && (s.validityYearFinish == null || s.validityYearFinish >= yearFormatted))):
+                          View( _context.MultiOwners.Where(s=> s.Commune == commune && s.Block == block &&  s.Property == property && s.ValidityYearBegin <= yearFormatted && (s.ValidityYearFinish == null || s.ValidityYearFinish >= yearFormatted))):
                           Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
            
         }
