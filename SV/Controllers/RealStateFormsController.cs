@@ -52,7 +52,7 @@ namespace SV.Controllers
             expandedDetailsOfForms viewData = new();
             viewData.Sellers = _context.People.Where(s=> s.FormsId == id && s.Seller == true).ToList();
             viewData.Buyers = _context.People.Where(s => s.FormsId == id && s.Seller == false).ToList();
-            viewData.realStateForm = realStateForm;
+            viewData.RealStateForm = realStateForm;
             return View(viewData);
         }
 
@@ -80,79 +80,65 @@ namespace SV.Controllers
                 _context.Add(realStateForm);
                 await _context.SaveChangesAsync();
 
-              
-                for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
+                if (Request.Form["NatureOfTheDeed"] != "Regularización de Patrimonio")
                 {
-                    try
+                    for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
                     {
                         double? ownershipPercentage;
-                        checkRut(Request.Form["rutSeller"][seller]);
-                        if (Request.Form["ownershipPercentageSeller"][seller] == null)
+                        if (bool.Parse(Request.Form["uncreditedClickedSeller"][seller]))
                         {
                             ownershipPercentage = null;
                         }
                         else
                         {
                             ownershipPercentage = double.Parse(Request.Form["ownershipPercentageSeller"][seller], CultureInfo.InvariantCulture);
-                            checkOwnershipPercentage(ownershipPercentage);
                         }
 
-                        Person newSeller = new();
-                        newSeller.Rut = Request.Form["rutSeller"][seller];
-                        newSeller.OwnershipPercentage= ownershipPercentage;
-                        newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
-                        newSeller.Seller = true;
-                        newSeller.Heir = false;
-                        newSeller.FormsId = getLastFormsRecord(_context).AttentionNumber;
-                        _context.Add(newSeller);
-                        await _context.SaveChangesAsync();
+                        if (IsValidRut(Request.Form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage))
+                        {
+                            Person newSeller = new();
+                            newSeller.Rut = Request.Form["rutSeller"][seller];
+                            newSeller.OwnershipPercentage= ownershipPercentage;
+                            newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
+                            newSeller.Seller = true;
+                            newSeller.Heir = false;
+                            newSeller.FormsId = getLastFormsRecord(_context).AttentionNumber;
+                            _context.Add(newSeller);
+                            await _context.SaveChangesAsync();
+                        }
+                        else 
+                        {
+                            List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == getLastFormsRecord(_context).AttentionNumber).ToList();
+                            _context.RemoveRange(peopleToRemoveFromDb);
+                            await _context.SaveChangesAsync();
+                            _context.Remove(realStateForm);
+                            await _context.SaveChangesAsync();
+                            ViewBag.Communes = _context.Commune.ToList();
+                            return View(realStateForm);
+                        }
 
 
                     }
-                    // Most specific:
-                    catch (ArgumentNullException e)
-                    {
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                        System.Diagnostics.Debug.WriteLine("{0} First exception caught.", e);
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                    }
-                    // Least specific:
-                    catch (FormatException e)
-                    {
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                        System.Diagnostics.Debug.WriteLine("{0} Second exception caught.", e);
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                    }
-                    catch (ArithmeticException e)
-                    {
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                        System.Diagnostics.Debug.WriteLine("{0} Third exception caught.", e);
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                    }
-
                 }
+                
 
                 for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
                 {
-                    System.Diagnostics.Debug.WriteLine(Request.Form["rutBuyer"].Count);
-                    System.Diagnostics.Debug.WriteLine(buyer);
-                    try
+                    double? ownershipPercentage;
+                    if (bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]))
                     {
-                        double? ownershipPercentage;
-                        checkRut(Request.Form["rutBuyer"][buyer]);
-                        if (Request.Form["ownershipPercentageBuyer"][buyer] == null)
-                        {
-                            ownershipPercentage = null;
-                        }
-                        else
-                        {
-                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer], CultureInfo.InvariantCulture);
-                            checkOwnershipPercentage(ownershipPercentage);
-                        }
+                        ownershipPercentage = null;
+                    }
+                    else
+                    {
+                        ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer], CultureInfo.InvariantCulture);
+                    }
 
+                    if (IsValidRut(Request.Form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage))
+                    {
                         Person newBuyer = new();
                         newBuyer.Rut = Request.Form["rutBuyer"][buyer];
-                        newBuyer.OwnershipPercentage = ownershipPercentage;
+                        newBuyer.OwnershipPercentage= ownershipPercentage;
                         newBuyer.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
                         newBuyer.Seller = false;
                         newBuyer.Heir = true;
@@ -160,24 +146,15 @@ namespace SV.Controllers
                         _context.Add(newBuyer);
                         await _context.SaveChangesAsync();
                     }
-                    catch (ArgumentNullException e)
+                    else
                     {
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                        System.Diagnostics.Debug.WriteLine("{0} First exception caught.", e);
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                    }
-                    // Least specific:
-                    catch (FormatException e)
-                    {
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                        System.Diagnostics.Debug.WriteLine("{0} Second exception caught.", e);
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                    }
-                    catch (ArithmeticException e)
-                    {
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
-                        System.Diagnostics.Debug.WriteLine("{0} Third exception caught.", e);
-                        System.Diagnostics.Debug.WriteLine("********************************************************************");
+                        List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == getLastFormsRecord(_context).AttentionNumber).ToList();
+                        _context.RemoveRange(peopleToRemoveFromDb);
+                        await _context.SaveChangesAsync();
+                        _context.Remove(realStateForm);
+                        await _context.SaveChangesAsync();
+                        ViewBag.Communes = _context.Commune.ToList();
+                        return View(realStateForm);
                     }
                 }
 
@@ -282,24 +259,22 @@ namespace SV.Controllers
           return (_context.RealStateForms?.Any(e => e.AttentionNumber == id)).GetValueOrDefault();
         }
 
-        static void checkRut(string rut)
+        static bool IsValidRut(string rut)
         {
             if (rut == "")
             {
-                throw new ArgumentNullException(paramName: nameof(rut), message: "Parameter can't be null");
+                return false;
             }
+            return true;
         }
 
-        static void checkOwnershipPercentage(double? ownershipPercentage)
+        static bool IsValidOwnershipPercentage(double? ownershipPercentage)
         {
-            if (ownershipPercentage < 0)
+            if (ownershipPercentage < 0 || ownershipPercentage > 100)
             {
-                throw new ArithmeticException("Percentage must be greater than 0");
+                return false;
             }
-            else if (ownershipPercentage > 100)
-            {
-                throw new ArithmeticException("Percentage must be lower than 100");
-            }
+            return true;
         }
 
         static async Task multiOwnerTableUpdate(InscripcionesBrDbContext _context)
@@ -312,7 +287,7 @@ namespace SV.Controllers
             {
                 
                 List<MultiOwner> latestMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber &&
-                                             multiowner.validityYearBegin == adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
+                                             multiowner.ValidityYearBegin == adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
                                                  multiowner.Property == currentForm.Property).ToList();
                 System.Diagnostics.Debug.WriteLine(latestMultiOwners.Count());
 
@@ -327,17 +302,17 @@ namespace SV.Controllers
             if (addToTable)
             {
                 List<Person> buyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false).ToList();
-                MultiOwner ? nextBuyer = _context.MultiOwners.Where(multiowner => multiowner.validityYearBegin > adjustedYear &&
+                MultiOwner ? nextBuyer = _context.MultiOwners.Where(multiowner => multiowner.ValidityYearBegin > adjustedYear &&
                                         multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
                                         multiowner.Property == currentForm.Property)
-                    .OrderBy(tableKey => tableKey.validityYearBegin).LastOrDefault();
+                    .OrderBy(tableKey => tableKey.ValidityYearBegin).LastOrDefault();
                 foreach (var buyer in buyers)
                 {
                     MultiOwner newMultiOwner = new MultiOwner();
                     newMultiOwner.Rut = buyer.Rut;
                     newMultiOwner.Sheets = currentForm.Sheets;
                     newMultiOwner.OwnershipPercentage = buyer.OwnershipPercentage;
-                    newMultiOwner.validityYearBegin = adjustedYear;
+                    newMultiOwner.ValidityYearBegin = adjustedYear;
                     newMultiOwner.Commune = currentForm.Commune;
                     newMultiOwner.Block = currentForm.Block;
                     newMultiOwner.Property = currentForm.Property;
@@ -345,25 +320,23 @@ namespace SV.Controllers
                     newMultiOwner.InscriptionNumber = currentForm.InscriptionNumber;
                     if (nextBuyer != null)
                     {
-                        newMultiOwner.validityYearFinish = nextBuyer.validityYearBegin - 1;
+                        newMultiOwner.ValidityYearFinish = nextBuyer.ValidityYearBegin - 1;
                         _context.Add(newMultiOwner);
                        
                     }
                     else { 
-                        // constante magica arreglar
-                        newMultiOwner.validityYearFinish = 0;
+                        newMultiOwner.ValidityYearFinish = null;
                         _context.Add(newMultiOwner);
                     }
                 }
                 await _context.SaveChangesAsync();
 
-                // constante magica arreglar
-                List<MultiOwner> previousMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.validityYearFinish == 0
-                                                && multiowner.validityYearBegin < adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
+                List<MultiOwner> previousMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.ValidityYearFinish == null
+                                                && multiowner.ValidityYearBegin < adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
                                                  multiowner.Property == currentForm.Property).ToList();
                 foreach (var previousMultiOwner  in previousMultiOwners)
                 {
-                    previousMultiOwner.validityYearFinish = adjustedYear - 1;
+                    previousMultiOwner.ValidityYearFinish = adjustedYear - 1;
                     _context.Update(previousMultiOwner);
                     await _context.SaveChangesAsync();
                 }
