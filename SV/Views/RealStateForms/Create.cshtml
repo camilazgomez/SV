@@ -18,8 +18,8 @@
             <div class="form-group">
                 <label asp-for="NatureOfTheDeed" class="control-label">CNE</label>
                 <select id="NatureOfTheDeed" name="NatureOfTheDeed">
-                    <option selected="selected">Compraventa</option>
-                    <option>Regularización de Patrimonio</option>
+                    <option data-id="buyAndSell" selected="selected">Compraventa</option>
+                    <option data-id="patrimonyRegularization">Regularización de Patrimonio</option>
                 </select>
                 <span asp-validation-for="NatureOfTheDeed" class="text-danger"></span>
             </div>

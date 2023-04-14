@@ -57,6 +57,28 @@ function defineHiddenFieldState(event) {
     
 }
 
+(function () {
+
+    $("select[name=NatureOfTheDeed]").change(function () {
+
+        if (this.options[this.selectedIndex].getAttribute("data-id") === "patrimonyRegularization") {
+            if (!document.querySelector(".sellers").classList.contains("is-hidden")) {
+                document.querySelector(".sellers").classList.toggle("is-hidden");
+                document.querySelector("#add-seller").classList.toggle("is-hidden");
+            }
+
+        }
+        else if (this.options[this.selectedIndex].getAttribute("data-id") === "buyAndSell") {
+            if (document.querySelector(".sellers").classList.contains("is-hidden")) {
+                document.querySelector(".sellers").classList.toggle("is-hidden");
+                document.querySelector("#add-seller").classList.toggle("is-hidden");
+            }
+        }
+
+    });
+})();
+
+
 window.onload = function () {
     addSellerFormFields();
     addBuyerFormFields();

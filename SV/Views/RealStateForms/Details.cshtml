@@ -7,54 +7,54 @@
 <h1>@ViewData["Title"]</h1>
 
 <div>
-    <h4>Formulario de Bienes Raíces  |  N° de Atención: @Html.DisplayFor(model => model.realStateForm.AttentionNumber)</h4>
+    <h4>Formulario de Bienes Raíces  |  N° de Atención: @Html.DisplayFor(model => model.RealStateForm.AttentionNumber)</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
             CNE
         </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.realStateForm.NatureOfTheDeed)
+        <dd class="col-sm-10" id="natureOfTheDeed">
+            @Html.DisplayFor(model => model.RealStateForm.NatureOfTheDeed)
         </dd>
         <dt class = "col-sm-2">
            Comuna
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.realStateForm.Commune)
+            @Html.DisplayFor(model => model.RealStateForm.Commune)
         </dd>
         <dt class = "col-sm-2">
             Manzana
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.realStateForm.Block)
+            @Html.DisplayFor(model => model.RealStateForm.Block)
         </dd>
         <dt class = "col-sm-2">
             Predio
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.realStateForm.Property)
+            @Html.DisplayFor(model => model.RealStateForm.Property)
         </dd>
         <dt class = "col-sm-2">
             Fojas
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.realStateForm.Sheets)
+            @Html.DisplayFor(model => model.RealStateForm.Sheets)
         </dd>
         <dt class = "col-sm-2">
             Fecha Inscripción
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.realStateForm.InscriptionDate)
+            @Html.DisplayFor(model => model.RealStateForm.InscriptionDate)
         </dd>
         <dt class = "col-sm-2">
             Número Inscripción
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.realStateForm.InscriptionNumber)
+            @Html.DisplayFor(model => model.RealStateForm.InscriptionNumber)
         </dd>
     </dl>
 </div>
-<div>
+<div class="sellers">
     <h5>Enajenante(s) o Causante(s)</h5>
     <table class="table">
         <thead>
@@ -128,3 +128,5 @@
 
     <a asp-action="Index">Volver a Formularios</a>
 </div>
+
+<script src="~/js/formDetails.js" asp-append-version="true"></script>
