@@ -66,7 +66,7 @@ namespace SV.Controllers
 
 
   
-
+        //TODO verificar que la suma de % adq <= 100
         // POST: RealStateForms/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
