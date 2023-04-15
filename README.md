@@ -4,7 +4,7 @@ Camila Zumaeta
 ## Instrucciones
 ### Para ejecutar este programa es importante primero correr la base de datos. Esta se encuentra en la carpeta SQL, en el archivo llamado *database.sql*. 
 Este archivo crea la base de datos con las tablas `RealStateForm`, `People`, `Communes` y `MultiOwner`.
-### Para conectarse a la base de datos desde la solución hay que cambiar el nombre del servidor que tiene la conexión a la base de datos, esto se hace en la carpeta raíz (SV) en el archivo *appsettings.json*.
+### Para conectarse a la base de datos desde la solución hay que cambiar el nombre del servidor que tiene la conexión a la base de datos, esto se hace en la carpeta SV en el archivo *appsettings.json* y *appsettings.Development.json*.
 ### Con esto es posible compilar el programa. 
 
 ## Supuestos
