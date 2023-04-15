@@ -109,11 +109,11 @@
             @foreach (var item in Model.Buyers)
 
                 {
-            <tr>
+            <tr class="heir-row">
                 <td>
                         @Html.DisplayFor(modelItem => item.Rut)
                 </td>
-                <td>
+                <td class="ownership-percentage">
                         @Html.DisplayFor(modelItem => item.OwnershipPercentage)
                 </td>
                 <td>
