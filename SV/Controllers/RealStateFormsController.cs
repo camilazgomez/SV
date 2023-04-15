@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.CodeAnalysis.VisualBasic.Syntax;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Primitives;
+using Microsoft.IdentityModel.Tokens;
 using NuGet.Protocol.Plugins;
 using SV.Models;
 using static System.Net.Mime.MediaTypeNames;
@@ -65,8 +67,8 @@ namespace SV.Controllers
         }
 
 
-  
-        //TODO verificar que la suma de % adq <= 100
+
+
         // POST: RealStateForms/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
@@ -120,7 +122,10 @@ namespace SV.Controllers
 
                     }
                 }
-                
+
+
+                List<string?> buyersOwnershipPercentage = Request.Form["ownershipPercentageBuyer"].ToList();
+                bool isValidBuyerOwnershipPercentageSum = IsValidBuyersOwnershipPercentageSum(buyersOwnershipPercentage);
 
                 for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
                 {
@@ -134,7 +139,7 @@ namespace SV.Controllers
                         ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer], CultureInfo.InvariantCulture);
                     }
 
-                    if (IsValidRut(Request.Form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage))
+                    if (IsValidRut(Request.Form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage) && isValidBuyerOwnershipPercentageSum)
                     {
                         Person newBuyer = new();
                         newBuyer.Rut = Request.Form["rutBuyer"][buyer];
@@ -159,7 +164,7 @@ namespace SV.Controllers
                 }
 
 
-                await multiOwnerTableUpdate(_context);
+                await MultiOwnerTableUpdate(_context);
                 return RedirectToAction(nameof(Index));
             }
             ViewBag.Communes = _context.Commune.ToList();
@@ -261,7 +266,7 @@ namespace SV.Controllers
 
         static bool IsValidRut(string rut)
         {
-            if (rut == "")
+            if (string.IsNullOrEmpty(rut))
             {
                 return false;
             }
@@ -277,7 +282,33 @@ namespace SV.Controllers
             return true;
         }
 
-        static async Task multiOwnerTableUpdate(InscripcionesBrDbContext _context)
+        static bool IsValidBuyersOwnershipPercentageSum(List<string?> buyersOwnershipPercentage)
+        {
+            buyersOwnershipPercentage.RemoveAt(0);
+            double? sumOwnershipPercentage = 0;
+            foreach (var buyerOwnershipPercentage in buyersOwnershipPercentage)
+            {
+                System.Diagnostics.Debug.WriteLine("*****");
+                System.Diagnostics.Debug.WriteLine(buyerOwnershipPercentage);
+                System.Diagnostics.Debug.WriteLine("*****");
+                if (string.IsNullOrEmpty(buyerOwnershipPercentage))
+                {
+                    sumOwnershipPercentage += 0;
+                }
+                else
+                {
+                    sumOwnershipPercentage += double.Parse(buyerOwnershipPercentage, CultureInfo.InvariantCulture);
+                }
+            }
+
+            if (sumOwnershipPercentage > 100)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        static async Task MultiOwnerTableUpdate(InscripcionesBrDbContext _context)
         {
             RealStateForm currentForm = getLastFormsRecord(_context);
             bool addToTable = true;
@@ -306,6 +337,23 @@ namespace SV.Controllers
                                         multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
                                         multiowner.Property == currentForm.Property)
                     .OrderBy(tableKey => tableKey.ValidityYearBegin).LastOrDefault();
+
+                List<Person> uncreditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == true).ToList();
+                List<Person> creditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == false).ToList();
+                double? sumCreditedOwnershipPercentage = 0;
+                foreach (var creditedPercentageBuyer in creditedOwnershipBuyers)
+                {
+                    sumCreditedOwnershipPercentage += creditedPercentageBuyer.OwnershipPercentage;
+                }
+
+                double? ownershipPercentageToAssign = (100 - sumCreditedOwnershipPercentage)/uncreditedOwnershipBuyers.Count;
+
+                foreach (var uncreditedOwnershipBuyer in uncreditedOwnershipBuyers) 
+                {
+                    uncreditedOwnershipBuyer.OwnershipPercentage = ownershipPercentageToAssign;
+
+                }
+
                 foreach (var buyer in buyers)
                 {
                     MultiOwner newMultiOwner = new MultiOwner();
