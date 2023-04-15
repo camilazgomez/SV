@@ -130,7 +130,12 @@ namespace SV.Controllers
                 for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
                 {
                     double? ownershipPercentage;
-                    if (bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]))
+                    bool uncreditedClickedBuyer = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
+                    if (string.IsNullOrEmpty(Request.Form["ownershipPercentageBuyer"][buyer]))
+                    {
+                        uncreditedClickedBuyer = true;
+                    }
+                    if (uncreditedClickedBuyer)
                     {
                         ownershipPercentage = null;
                     }
@@ -144,7 +149,7 @@ namespace SV.Controllers
                         Person newBuyer = new();
                         newBuyer.Rut = Request.Form["rutBuyer"][buyer];
                         newBuyer.OwnershipPercentage= ownershipPercentage;
-                        newBuyer.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
+                        newBuyer.UncreditedOwnership = uncreditedClickedBuyer;
                         newBuyer.Seller = false;
                         newBuyer.Heir = true;
                         newBuyer.FormsId = getLastFormsRecord(_context).AttentionNumber;
