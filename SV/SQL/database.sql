@@ -72,26 +72,6 @@ GO
 SET IDENTITY_INSERT [dbo].[Persona] OFF
 GO
 
-USE [InscripcionesBrDb]
-GO
-SET IDENTITY_INSERT [dbo].[RealStateForm] ON 
-GO
-INSERT [dbo].[RealStateForm] (
-    [attentionNumber],
-    [natureOfTheDeed],
-    [commune],
-    [block],
-    [property],
-    [sheets],
-    [inscriptionDate],
-    [inscriptionNumber]
-)
-VALUES 
-(1, N'Compraventa', N'Las Condes', N'200', N'200', 1, CAST(N'2022-11-24' As Date), 1)
-GO
-SET IDENTITY_INSERT [dbo].[RealStateForm] OFF
-GO
-
 
 CREATE TABLE Communes (
   [Id]              INT           IDENTITY (1, 1) NOT NULL PRIMARY KEY,
