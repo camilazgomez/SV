@@ -321,13 +321,13 @@ namespace SV.Controllers
 
             if (checkYearAlreadyExists(currentForm,_context))
             {
-                
+                List<MultiOwner> higherInscriptionNumberMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber > currentForm.InscriptionNumber &&
+                                             multiowner.ValidityYearBegin == adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
+                                                 multiowner.Property == currentForm.Property).ToList();
                 List<MultiOwner> latestMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber &&
                                              multiowner.ValidityYearBegin == adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
                                                  multiowner.Property == currentForm.Property).ToList();
-                System.Diagnostics.Debug.WriteLine(latestMultiOwners.Count());
-
-                if (latestMultiOwners.Count() >= 0)
+                if (latestMultiOwners.Count() >= 0 && higherInscriptionNumberMultiOwners.Count() == 0)
                 {
                     _context.MultiOwners.RemoveRange(latestMultiOwners);
                 }

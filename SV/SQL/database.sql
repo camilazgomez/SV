@@ -42,12 +42,10 @@ CREATE TABLE [dbo].[MultiOwner] (
     [sheets]              INT           NOT NULL,
     [inscriptionDate]     DATE          NOT NULL,
     [inscriptionNumber]   INT           NOT NULL,
-    [formsId]             INT           NULL,
     [validityYearBegin]             INT           NULL,
     [validityYearFinish]             INT           NULL,
-    PRIMARY KEY CLUSTERED ([Id] ASC),
-    CONSTRAINT [FK_MultiOwner_(ToTableColumn)] FOREIGN KEY ([formsId]) REFERENCES [dbo].[RealStateForm] ([attentionNumber])
-);
+    PRIMARY KEY CLUSTERED ([Id] ASC)
+    );
 GO
 
 CREATE TABLE [dbo].[People] (
