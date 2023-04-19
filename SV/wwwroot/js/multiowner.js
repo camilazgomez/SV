@@ -20,11 +20,18 @@ for (var i = currentYear; i >= 1900; i--) {
 }
 
 const eraseFilterBtn = document.querySelector("#eraseFilterBtn");
+var block = document.getElementById('block');
+var property = document.getElementById('property');
+var year = document.getElementById('year');
 
 eraseFilterBtn.addEventListener("click", hideTable);
 
 function hideTable() {
     if (!document.querySelector(".table").classList.value.includes('is-hidden')) {
         document.querySelector(".table").classList.toggle("is-hidden");
+        block.value = ""
+        property.value = ""
+        year.value = 2023
+
     }
 }

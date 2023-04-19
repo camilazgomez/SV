@@ -9,10 +9,11 @@
     <form asp-action="MultiOwnerQuery" asp-controller="Home" method="get">
         <div class="form-group row">
             <input type="hidden" id="selectedYear" name="electedYear" value="@ViewData["CurrentYear"]">
+            <input type="hidden" id="selectedYear" name="electedYear" value="@ViewData["CurrentCommune"]">
             <div class="col-sm-10">
                 <label>Comuna </label>
-                <input type="text" name="Commune" list="List" >
-                <datalist id="List" name="Commune" value="@ViewData["CurrentCommune"] >
+                <input type="text" name="Commune" list="List" placeholder="Select..">
+                <datalist id="List" name="Commune" value="@ViewData["CurrentCommune"]" >
                     @{
                         int counterOfCommunes = 0;
                         @foreach (var commune in ViewBag.Communes)
