@@ -30,7 +30,7 @@ namespace SV.Controllers
         // GET: RealStateForms
         public async Task<IActionResult> Index()
         {
-              return _context.RealStateForms != null ? 
+            return _context.RealStateForms != null ? 
                           View(await _context.RealStateForms.ToListAsync()) :
                           Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
         }
@@ -38,9 +38,8 @@ namespace SV.Controllers
         // GET: RealStateForms/Details/5
         public async Task<IActionResult> Details(int? id)
         {
-
-         
-            if (id == null || _context.RealStateForms == null)
+            bool invalidForm = id == null || _context.RealStateForms == null;
+            if (invalidForm)
             {
                 return NotFound();
             }
@@ -96,7 +95,8 @@ namespace SV.Controllers
                             ownershipPercentage = double.Parse(Request.Form["ownershipPercentageSeller"][seller], CultureInfo.InvariantCulture);
                         }
 
-                        if (IsValidRut(Request.Form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage))
+                        bool validInputSeller = IsValidRut(Request.Form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
+                        if (validInputSeller)
                         {
                             Person newSeller = new();
                             newSeller.Rut = Request.Form["rutSeller"][seller];
@@ -104,13 +104,13 @@ namespace SV.Controllers
                             newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
                             newSeller.Seller = true;
                             newSeller.Heir = false;
-                            newSeller.FormsId = getLastFormsRecord(_context).AttentionNumber;
+                            newSeller.FormsId = GetLastFormsRecord(_context).AttentionNumber;
                             _context.Add(newSeller);
                             await _context.SaveChangesAsync();
                         }
                         else 
                         {
-                            List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == getLastFormsRecord(_context).AttentionNumber).ToList();
+                            List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == GetLastFormsRecord(_context).AttentionNumber).ToList();
                             _context.RemoveRange(peopleToRemoveFromDb);
                             await _context.SaveChangesAsync();
                             _context.Remove(realStateForm);
@@ -118,15 +118,11 @@ namespace SV.Controllers
                             ViewBag.Communes = _context.Commune.ToList();
                             return View(realStateForm);
                         }
-
-
                     }
                 }
 
-
                 List<string?> buyersOwnershipPercentage = Request.Form["ownershipPercentageBuyer"].ToList();
                 bool isValidBuyerOwnershipPercentageSum = IsValidBuyersOwnershipPercentageSum(buyersOwnershipPercentage);
-
                 for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
                 {
                     double? ownershipPercentage;
@@ -144,7 +140,8 @@ namespace SV.Controllers
                         ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer], CultureInfo.InvariantCulture);
                     }
 
-                    if (IsValidRut(Request.Form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage) && isValidBuyerOwnershipPercentageSum)
+                    bool validBuyerInput = IsValidRut(Request.Form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage) && isValidBuyerOwnershipPercentageSum;
+                    if (validBuyerInput)
                     {
                         Person newBuyer = new();
                         newBuyer.Rut = Request.Form["rutBuyer"][buyer];
@@ -152,13 +149,13 @@ namespace SV.Controllers
                         newBuyer.UncreditedOwnership = uncreditedClickedBuyer;
                         newBuyer.Seller = false;
                         newBuyer.Heir = true;
-                        newBuyer.FormsId = getLastFormsRecord(_context).AttentionNumber;
+                        newBuyer.FormsId = GetLastFormsRecord(_context).AttentionNumber;
                         _context.Add(newBuyer);
                         await _context.SaveChangesAsync();
                     }
                     else
                     {
-                        List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == getLastFormsRecord(_context).AttentionNumber).ToList();
+                        List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == GetLastFormsRecord(_context).AttentionNumber).ToList();
                         _context.RemoveRange(peopleToRemoveFromDb);
                         await _context.SaveChangesAsync();
                         _context.Remove(realStateForm);
@@ -167,8 +164,6 @@ namespace SV.Controllers
                         return View(realStateForm);
                     }
                 }
-
-
                 await MultiOwnerTableUpdate(_context);
                 return RedirectToAction(nameof(Index));
             }
@@ -230,7 +225,8 @@ namespace SV.Controllers
         // GET: RealStateForms/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null || _context.RealStateForms == null)
+            bool invalidForm = id == null || _context.RealStateForms == null;
+            if (invalidForm)
             {
                 return NotFound();
             }
@@ -241,7 +237,6 @@ namespace SV.Controllers
             {
                 return NotFound();
             }
-
             return View(realStateForm);
         }
 
@@ -259,7 +254,6 @@ namespace SV.Controllers
             {
                 _context.RealStateForms.Remove(realStateForm);
             }
-            
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -269,7 +263,7 @@ namespace SV.Controllers
           return (_context.RealStateForms?.Any(e => e.AttentionNumber == id)).GetValueOrDefault();
         }
 
-        static bool IsValidRut(string rut)
+        private static bool IsValidRut(string rut)
         {
             if (string.IsNullOrEmpty(rut))
             {
@@ -278,24 +272,22 @@ namespace SV.Controllers
             return true;
         }
 
-        static bool IsValidOwnershipPercentage(double? ownershipPercentage)
+        private static bool IsValidOwnershipPercentage(double? ownershipPercentage)
         {
-            if (ownershipPercentage < 0 || ownershipPercentage > 100)
+            bool validPercentage = ownershipPercentage < 0 || ownershipPercentage > 100;
+            if (validPercentage)
             {
                 return false;
             }
             return true;
         }
 
-        static bool IsValidBuyersOwnershipPercentageSum(List<string?> buyersOwnershipPercentage)
+        private static bool IsValidBuyersOwnershipPercentageSum(List<string?> buyersOwnershipPercentage)
         {
             buyersOwnershipPercentage.RemoveAt(0);
             double? sumOwnershipPercentage = 0;
             foreach (var buyerOwnershipPercentage in buyersOwnershipPercentage)
             {
-                System.Diagnostics.Debug.WriteLine("*****");
-                System.Diagnostics.Debug.WriteLine(buyerOwnershipPercentage);
-                System.Diagnostics.Debug.WriteLine("*****");
                 if (string.IsNullOrEmpty(buyerOwnershipPercentage))
                 {
                     sumOwnershipPercentage += 0;
@@ -305,7 +297,6 @@ namespace SV.Controllers
                     sumOwnershipPercentage += double.Parse(buyerOwnershipPercentage, CultureInfo.InvariantCulture);
                 }
             }
-
             if (sumOwnershipPercentage > 100)
             {
                 return false;
@@ -313,23 +304,24 @@ namespace SV.Controllers
             return true;
         }
 
-        static async Task MultiOwnerTableUpdate(InscripcionesBrDbContext _context)
+        private static async Task MultiOwnerTableUpdate(InscripcionesBrDbContext _context)
         {
-            RealStateForm currentForm = getLastFormsRecord(_context);
+            RealStateForm currentForm = GetLastFormsRecord(_context);
             bool addToTable = true;
-            int adjustedYear = adjustYear(currentForm.InscriptionDate.Year);
+            int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
 
-            if (checkYearAlreadyExists(currentForm,_context))
+            if (CheckYearAlreadyExists(currentForm,_context))
             {
                 List<MultiOwner> higherInscriptionNumberMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber > currentForm.InscriptionNumber &&
                                              multiowner.ValidityYearBegin == adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
                                                  multiowner.Property == currentForm.Property).ToList();
-                List<MultiOwner> latestMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber &&
+                List<MultiOwner> previousMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber &&
                                              multiowner.ValidityYearBegin == adjustedYear && multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
                                                  multiowner.Property == currentForm.Property).ToList();
-                if (latestMultiOwners.Count() >= 0 && higherInscriptionNumberMultiOwners.Count() == 0)
+                bool latestmultiOwner = previousMultiOwners.Count() >= 0 && higherInscriptionNumberMultiOwners.Count() == 0;
+                if (latestmultiOwner)
                 {
-                    _context.MultiOwners.RemoveRange(latestMultiOwners);
+                    _context.MultiOwners.RemoveRange(previousMultiOwners);
                 }
                 else { 
                     addToTable = false; 
@@ -396,14 +388,14 @@ namespace SV.Controllers
             }
         }
 
-        static RealStateForm getLastFormsRecord(InscripcionesBrDbContext _context)
+        private static RealStateForm GetLastFormsRecord(InscripcionesBrDbContext _context)
         {
            return  _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
         }
 
-        static bool checkYearAlreadyExists(RealStateForm realStateForm, InscripcionesBrDbContext _context)
+        private static bool CheckYearAlreadyExists(RealStateForm realStateForm, InscripcionesBrDbContext _context)
         {
-            int year = adjustYear(realStateForm.InscriptionDate.Year);  
+            int year = AdjustYear(realStateForm.InscriptionDate.Year);  
             System.Diagnostics.Debug.WriteLine(year);
             List<MultiOwner> multiOwnersOfGivenYear = _context.MultiOwners.Where(multiowner => multiowner.InscriptionDate.Year == year &&
                                                  multiowner.Block == realStateForm.Block && multiowner.Commune == realStateForm.Commune &&
@@ -415,7 +407,7 @@ namespace SV.Controllers
             return false;
         }
 
-        static int adjustYear(int year)
+        private static int AdjustYear(int year)
         {
             int adjustedYear = year;
             if (year < 2019) {

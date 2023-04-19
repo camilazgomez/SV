@@ -30,9 +30,9 @@ namespace SV.Controllers
                 return RedirectToAction("index", "RealStateForm");
             }
 
-            if (String.IsNullOrEmpty(commune) || String.IsNullOrEmpty(block) || String.IsNullOrEmpty(property))
+            bool invalidQuery = String.IsNullOrEmpty(commune) || String.IsNullOrEmpty(block) || String.IsNullOrEmpty(property);
+            if (invalidQuery)
             {
-
                 ViewData["CurrentCommune"] = "";
                 ViewData["CurrentYear"] = 0;
                 ViewBag.Communes = _context.Commune.ToList();
@@ -40,9 +40,7 @@ namespace SV.Controllers
                 
             }
             int yearFormatted = int.Parse(year);
-
             ViewBag.Communes = _context.Commune.ToList();
-            System.Diagnostics.Debug.WriteLine(commune);
             ViewData["CurrentCommune"] = commune;
             ViewData["CurrentBlock"] = block;
             ViewData["CurrentProperty"] = property;
@@ -54,9 +52,6 @@ namespace SV.Controllers
         }
 
       
-
-
-
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
         {

@@ -25,24 +25,25 @@
             </div>
             <div class="form-group">
                 <label asp-for="Commune" class="control-label">Comuna</label>
-                <select id="Commune" name="Commune">
+                <input asp-for="Commune" type="text" name="Commune" placeholder="Select..." list="List">
+                <datalist id="List" name="Commune">
                     @{
                         int counterOfCommunes = 0;
                         @foreach (var commune in ViewBag.Communes)
                         {
                             if (counterOfCommunes == 0)
                             {
-                                <option selected="selected">@commune.Name</option>
+                                <option selected="selected" value="@commune.Name">@commune.Name</option>
                                 counterOfCommunes += 1;
                             }
                             else
                             {
-                                <option>@commune.Name</option>
+                                <option value="@commune.Name">@commune.Name</option>
                             }
 
                         }
                 }
-                </select>
+                </datalist>
                 <span asp-validation-for="Commune" class="text-danger"></span>
             </div>
             <div class="form-group">
