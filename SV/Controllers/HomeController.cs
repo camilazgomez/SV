@@ -25,6 +25,7 @@ namespace SV.Controllers
         public async Task<IActionResult> MultiOwnerQuery(string commune, string block, string property, string year )
            
         {
+            string emptyString = "";
             if (_context.MultiOwners == null)
             {
                 return RedirectToAction("index", "RealStateForm");
@@ -33,7 +34,7 @@ namespace SV.Controllers
             bool invalidQuery = String.IsNullOrEmpty(commune) || String.IsNullOrEmpty(block) || String.IsNullOrEmpty(property);
             if (invalidQuery)
             {
-                ViewData["CurrentCommune"] = "";
+                ViewData["CurrentCommune"] = emptyString;
                 ViewData["CurrentYear"] = 0;
                 ViewBag.Communes = _context.Commune.ToList();
                 return View(); 

@@ -21,6 +21,7 @@ namespace SV.Controllers
     public class RealStateFormsController : Controller
     {
         private readonly InscripcionesBrDbContext _context;
+        private const string standardPatrimonyRegularisation = "Regularización de Patrimonio";
 
         public RealStateFormsController(InscripcionesBrDbContext context)
         {
@@ -75,13 +76,13 @@ namespace SV.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AttentionNumber,NatureOfTheDeed,Commune,Block,Property,Sheets,InscriptionDate,InscriptionNumber")] RealStateForm realStateForm)
         {
-
-            if (ModelState.IsValid)
+            bool saveForm = ModelState.IsValid && Request.Form["NatureOfTheDeed"] == standardPatrimonyRegularisation;
+            if (saveForm)
             {
                 _context.Add(realStateForm);
                 await _context.SaveChangesAsync();
 
-                if (Request.Form["NatureOfTheDeed"] != "Regularización de Patrimonio")
+                if (Request.Form["NatureOfTheDeed"] != standardPatrimonyRegularisation)
                 {
                     for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
                     {
