@@ -72,7 +72,6 @@ public partial class InscripcionesBrDbContext : DbContext
                 .HasColumnName("rut");
             entity.Property(e => e.Seller).HasColumnName("seller");
             entity.Property(e => e.UncreditedOwnership).HasColumnName("uncreditedOwnership");
-
             entity.HasOne(d => d.Forms).WithMany(p => p.People)
                 .HasForeignKey(d => d.FormsId)
                 .HasConstraintName("FK_People_(ToTableColumn)");

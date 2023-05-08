@@ -99,13 +99,7 @@ namespace SV.Controllers
                         bool validInputSeller = IsValidRut(Request.Form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
                         if (validInputSeller)
                         {
-                            Person newSeller = new();
-                            newSeller.Rut = Request.Form["rutSeller"][seller];
-                            newSeller.OwnershipPercentage= ownershipPercentage;
-                            newSeller.UncreditedOwnership = bool.Parse(Request.Form["uncreditedClickedSeller"][seller]);
-                            newSeller.Seller = true;
-                            newSeller.Heir = false;
-                            newSeller.FormsId = GetLastFormsRecord(_context).AttentionNumber;
+                            Person newSeller = new(Request.Form["rutSeller"][seller], ownershipPercentage, bool.Parse(Request.Form["uncreditedClickedSeller"][seller]), GetLastFormsRecord(_context).AttentionNumber, true, false);
                             _context.Add(newSeller);
                             await _context.SaveChangesAsync();
                         }
@@ -144,13 +138,8 @@ namespace SV.Controllers
                     bool validBuyerInput = IsValidRut(Request.Form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage) && isValidBuyerOwnershipPercentageSum;
                     if (validBuyerInput)
                     {
-                        Person newBuyer = new();
+                        Person newBuyer = new(Request.Form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, GetLastFormsRecord(_context).AttentionNumber, false, true);
                         newBuyer.Rut = Request.Form["rutBuyer"][buyer];
-                        newBuyer.OwnershipPercentage= ownershipPercentage;
-                        newBuyer.UncreditedOwnership = uncreditedClickedBuyer;
-                        newBuyer.Seller = false;
-                        newBuyer.Heir = true;
-                        newBuyer.FormsId = GetLastFormsRecord(_context).AttentionNumber;
                         _context.Add(newBuyer);
                         await _context.SaveChangesAsync();
                     }
@@ -354,24 +343,18 @@ namespace SV.Controllers
 
                 foreach (var buyer in buyers)
                 {
-                    MultiOwner newMultiOwner = new MultiOwner();
-                    newMultiOwner.Rut = buyer.Rut;
-                    newMultiOwner.Sheets = currentForm.Sheets;
-                    newMultiOwner.OwnershipPercentage = buyer.OwnershipPercentage;
-                    newMultiOwner.ValidityYearBegin = adjustedYear;
-                    newMultiOwner.Commune = currentForm.Commune;
-                    newMultiOwner.Block = currentForm.Block;
-                    newMultiOwner.Property = currentForm.Property;
-                    newMultiOwner.InscriptionDate = currentForm.InscriptionDate;
-                    newMultiOwner.InscriptionNumber = currentForm.InscriptionNumber;
                     if (nextBuyer != null)
                     {
-                        newMultiOwner.ValidityYearFinish = nextBuyer.ValidityYearBegin - 1;
+                        int validityYearFinish = nextBuyer.ValidityYearBegin - 1;
+                        MultiOwner newMultiOwner = new MultiOwner(buyer.Rut, buyer.OwnershipPercentage, currentForm.Commune, currentForm.Block, currentForm.Property, currentForm.Sheets, currentForm.InscriptionDate,
+                                                currentForm.InscriptionNumber, adjustedYear, validityYearFinish);
                         _context.Add(newMultiOwner);
                        
                     }
                     else { 
-                        newMultiOwner.ValidityYearFinish = null;
+                        int? validityYearFinish = null;
+                        MultiOwner newMultiOwner = new MultiOwner(buyer.Rut, buyer.OwnershipPercentage, currentForm.Commune, currentForm.Block, currentForm.Property, currentForm.Sheets, currentForm.InscriptionDate,
+                                                currentForm.InscriptionNumber, adjustedYear, validityYearFinish);
                         _context.Add(newMultiOwner);
                     }
                 }
