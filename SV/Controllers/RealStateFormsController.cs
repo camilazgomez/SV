@@ -21,6 +21,7 @@ namespace SV.Controllers
     public class RealStateFormsController : Controller
     {
         private readonly InscripcionesBrDbContext _context;
+        private IFormCollection form;
         private const string standardPatrimonyRegularisation = "Regularización de Patrimonio";
 
         public RealStateFormsController(InscripcionesBrDbContext context)
@@ -76,83 +77,44 @@ namespace SV.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AttentionNumber,NatureOfTheDeed,Commune,Block,Property,Sheets,InscriptionDate,InscriptionNumber")] RealStateForm realStateForm)
         {
-            bool saveForm = ModelState.IsValid && Request.Form["NatureOfTheDeed"] == standardPatrimonyRegularisation;
+            form = Request.Form;
+            bool saveForm = ModelState.IsValid && form["NatureOfTheDeed"] == standardPatrimonyRegularisation;
             if (saveForm)
             {
                 _context.Add(realStateForm);
                 await _context.SaveChangesAsync();
 
-                if (Request.Form["NatureOfTheDeed"] != standardPatrimonyRegularisation)
+                if (form["NatureOfTheDeed"] != standardPatrimonyRegularisation)
                 {
-                    for (int seller = 1; seller < Request.Form["rutSeller"].Count; seller++)
+                    bool validSellers = AreValidFormSellers(form);
+                    if (validSellers)
                     {
-                        double? ownershipPercentage;
-                        if (bool.Parse(Request.Form["uncreditedClickedSeller"][seller]))
-                        {
-                            ownershipPercentage = null;
-                        }
-                        else
-                        {
-                            ownershipPercentage = double.Parse(Request.Form["ownershipPercentageSeller"][seller], CultureInfo.InvariantCulture);
-                        }
-
-                        bool validInputSeller = IsValidRut(Request.Form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
-                        if (validInputSeller)
-                        {
-                            Person newSeller = new(Request.Form["rutSeller"][seller], ownershipPercentage, bool.Parse(Request.Form["uncreditedClickedSeller"][seller]), GetLastFormsRecord(_context).AttentionNumber, true, false);
-                            _context.Add(newSeller);
-                            await _context.SaveChangesAsync();
-                        }
-                        else 
-                        {
-                            List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == GetLastFormsRecord(_context).AttentionNumber).ToList();
-                            _context.RemoveRange(peopleToRemoveFromDb);
-                            await _context.SaveChangesAsync();
-                            _context.Remove(realStateForm);
-                            await _context.SaveChangesAsync();
-                            ViewBag.Communes = _context.Commune.ToList();
-                            return View(realStateForm);
-                        }
-                    }
-                }
-
-                List<string?> buyersOwnershipPercentage = Request.Form["ownershipPercentageBuyer"].ToList();
-                bool isValidBuyerOwnershipPercentageSum = IsValidBuyersOwnershipPercentageSum(buyersOwnershipPercentage);
-                for (int buyer = 1; buyer < Request.Form["rutBuyer"].Count; buyer++)
-                {
-                    double? ownershipPercentage;
-                    bool uncreditedClickedBuyer = bool.Parse(Request.Form["uncreditedClickedBuyer"][buyer]);
-                    if (string.IsNullOrEmpty(Request.Form["ownershipPercentageBuyer"][buyer]))
-                    {
-                        uncreditedClickedBuyer = true;
-                    }
-                    if (uncreditedClickedBuyer)
-                    {
-                        ownershipPercentage = null;
+                        await AddSellers(_context, form);
                     }
                     else
                     {
-                        ownershipPercentage = double.Parse(Request.Form["ownershipPercentageBuyer"][buyer], CultureInfo.InvariantCulture);
-                    }
-
-                    bool validBuyerInput = IsValidRut(Request.Form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage) && isValidBuyerOwnershipPercentageSum;
-                    if (validBuyerInput)
-                    {
-                        Person newBuyer = new(Request.Form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, GetLastFormsRecord(_context).AttentionNumber, false, true);
-                        newBuyer.Rut = Request.Form["rutBuyer"][buyer];
-                        _context.Add(newBuyer);
-                        await _context.SaveChangesAsync();
-                    }
-                    else
-                    {
-                        List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == GetLastFormsRecord(_context).AttentionNumber).ToList();
-                        _context.RemoveRange(peopleToRemoveFromDb);
-                        await _context.SaveChangesAsync();
                         _context.Remove(realStateForm);
                         await _context.SaveChangesAsync();
                         ViewBag.Communes = _context.Commune.ToList();
                         return View(realStateForm);
-                    }
+                    } 
+                }
+                List<string?> buyersOwnershipPercentage = Request.Form["ownershipPercentageBuyer"].ToList();
+                bool isValidBuyerOwnershipPercentageSum = IsValidBuyersOwnershipPercentageSum(buyersOwnershipPercentage);
+                bool validBuyers = AreValidFormBuyers(form);
+                if (validBuyers && isValidBuyerOwnershipPercentageSum)
+                {
+                    await AddBuyers(_context, form);
+                }
+                else
+                {
+                    List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == GetLastFormsRecord(_context).AttentionNumber).ToList();
+                    _context.RemoveRange(peopleToRemoveFromDb);
+                    await _context.SaveChangesAsync();
+                    _context.Remove(realStateForm);
+                    await _context.SaveChangesAsync();
+                    ViewBag.Communes = _context.Commune.ToList();
+                    return View(realStateForm);
                 }
                 await MultiOwnerTableUpdate(_context);
                 return RedirectToAction(nameof(Index));
@@ -253,6 +215,56 @@ namespace SV.Controllers
           return (_context.RealStateForms?.Any(e => e.AttentionNumber == id)).GetValueOrDefault();
         }
 
+        private static bool AreValidFormSellers(IFormCollection form)
+        {
+            for (int seller = 1; seller < form["rutSeller"].Count; seller++)
+            {
+                double? ownershipPercentage;
+                bool uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
+                ownershipPercentage = getOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
+                bool validInputSeller = IsValidRut(form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
+                if (!validInputSeller)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static bool AreValidFormBuyers(IFormCollection form)
+        {
+            for (int buyer = 1; buyer < form["rutBuyer"].Count; buyer++)
+            {
+                double? ownershipPercentage;
+                bool uncreditedClickedBuyer = bool.Parse(form["uncreditedClickedBuyer"][buyer]);
+                if (string.IsNullOrEmpty(form["ownershipPercentageBuyer"][buyer]))
+                {
+                    uncreditedClickedBuyer = true;
+                }
+                ownershipPercentage = getOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
+                bool validBuyerInput = IsValidRut(form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage);
+                if (!validBuyerInput)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        private static double? getOwnershipPercentage(bool uncreditedPercentage, string ownershipPercentageFromForm)
+        {
+            double? ownershipPercentage;
+            if (uncreditedPercentage)
+            {
+                ownershipPercentage = null;
+            }
+            else
+            {
+                ownershipPercentage = double.Parse(ownershipPercentageFromForm, CultureInfo.InvariantCulture);
+            }
+            return ownershipPercentage;
+        }
+
         private static bool IsValidRut(string rut)
         {
             if (string.IsNullOrEmpty(rut))
@@ -292,6 +304,37 @@ namespace SV.Controllers
                 return false;
             }
             return true;
+        }
+
+        private static async Task AddSellers(InscripcionesBrDbContext _context, IFormCollection form)
+        {
+            for (int seller = 1; seller < form["rutSeller"].Count; seller++)
+            {
+                double? ownershipPercentage;
+                bool uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
+                ownershipPercentage = getOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
+                Person newSeller = new(form["rutSeller"][seller], ownershipPercentage, bool.Parse(form["uncreditedClickedSeller"][seller]), GetLastFormsRecord(_context).AttentionNumber, true, false);
+                _context.Add(newSeller);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        private static async Task AddBuyers(InscripcionesBrDbContext _context, IFormCollection form)
+        {
+            for (int buyer = 1; buyer < form["rutBuyer"].Count; buyer++)
+            {
+                double? ownershipPercentage;
+                bool uncreditedClickedBuyer = bool.Parse(form["uncreditedClickedBuyer"][buyer]);
+                if (string.IsNullOrEmpty(form["ownershipPercentageBuyer"][buyer]))
+                {
+                    uncreditedClickedBuyer = true;
+                }
+                ownershipPercentage = getOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
+                Person newBuyer = new(form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, GetLastFormsRecord(_context).AttentionNumber, false, true);
+                newBuyer.Rut = form["rutBuyer"][buyer];
+                _context.Add(newBuyer);
+                await _context.SaveChangesAsync();
+            }
         }
 
         private static async Task MultiOwnerTableUpdate(InscripcionesBrDbContext _context)
