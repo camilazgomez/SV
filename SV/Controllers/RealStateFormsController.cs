@@ -378,19 +378,20 @@ namespace SV.Controllers
                 else
                 {
                     double? totalBuyersSum = buyers.Sum(item => item.OwnershipPercentage);
+                    List<string> ruts = sellers.Select(o => o.Rut).ToList();
+                    List<MultiOwner> sellerMultiOwners = new List<MultiOwner>();
+                    foreach (var rut in ruts)
+                    {
+                        MultiOwner sellerMultiOwner = _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
+                                                       m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
+                                                       m.ValidityYearFinish == null).
+                                                       OrderBy(tableKey => tableKey.Id).LastOrDefault();
+                        sellerMultiOwners.Add(sellerMultiOwner);
+                    }
                     // punto 4
                     if (totalBuyersSum == 100)
                     {
-                        List<string> ruts = sellers.Select(o => o.Rut).ToList();
-                        List<MultiOwner> sellerMultiOwners= new List<MultiOwner>();
-                        foreach (var rut in ruts)
-                        {
-                            MultiOwner sellerMultiOwner = _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
-                                                           m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
-                                                           m.ValidityYearFinish == null).
-                                                           OrderBy(tableKey => tableKey.Id).LastOrDefault();
-                            sellerMultiOwners.Add(sellerMultiOwner);
-                        }
+                        
                         double? totalSellersSum = sellerMultiOwners?.Sum(m => m.OwnershipPercentage);
                         System.Diagnostics.Debug.WriteLine(totalBuyersSum);
                         System.Diagnostics.Debug.WriteLine(totalSellersSum);
@@ -405,6 +406,14 @@ namespace SV.Controllers
                             sellerMultiOwner.ValidityYearFinish = adjustedYear;
                         }
                         await _context.SaveChangesAsync();
+                    }
+                    // punto 5
+                    else if (totalBuyersSum < 100 && totalBuyersSum > 0 && buyers.Count() == 1 && sellers.Count() == 1)
+                    {
+                        buyers[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
+                        sellerMultiOwners[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
+                        await _context.SaveChangesAsync();
+                        await AddNewMultiOwners(_context, buyers, currentForm);
                     }
 
                 }
