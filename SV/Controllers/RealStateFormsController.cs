@@ -13,7 +13,9 @@ using Microsoft.Extensions.Primitives;
 using Microsoft.IdentityModel.Tokens;
 using NuGet.Protocol.Plugins;
 using SV.Models;
+using System.Linq;
 using static System.Net.Mime.MediaTypeNames;
+using System.Collections;
 
 
 namespace SV.Controllers
@@ -78,7 +80,7 @@ namespace SV.Controllers
         public async Task<IActionResult> Create([Bind("AttentionNumber,NatureOfTheDeed,Commune,Block,Property,Sheets,InscriptionDate,InscriptionNumber")] RealStateForm realStateForm)
         {
             form = Request.Form;
-            bool saveForm = ModelState.IsValid && form["NatureOfTheDeed"] == standardPatrimonyRegularisation;
+            bool saveForm = ModelState.IsValid;
             if (saveForm)
             {
                 _context.Add(realStateForm);
@@ -342,7 +344,7 @@ namespace SV.Controllers
             RealStateForm currentForm = GetLastFormsRecord(_context);
             bool addToTable = true;
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
-            if (CheckYearAlreadyExists(currentForm,_context))
+            if (CheckYearAlreadyExists(currentForm,_context) && currentForm.NatureOfTheDeed == standardPatrimonyRegularisation)
             {
                 List<MultiOwner> higherInscriptionNumberMultiOwners = getMultiOwnersWithHigherInscriptionNumber(_context, currentForm);
                 List<MultiOwner> previousMultiOwners = getMultiOwnersWithLowerInscriptionNumber(_context, currentForm);
@@ -358,17 +360,55 @@ namespace SV.Controllers
             if (addToTable)
             {
                 List<Person> buyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false).ToList();
-                // se hace calculo de porcentajes para caso de cne 99
-                List<Person> uncreditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == true).ToList();
-                List<Person> creditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == false).ToList();
-                double? ownershipPercentageToAssign = getAssignedOwnershipPercentage(creditedOwnershipBuyers, uncreditedOwnershipBuyers);
-                // se asignan porcentajes para caso de cne 99
-                foreach (var uncreditedOwnershipBuyer in uncreditedOwnershipBuyers) 
+                List<Person> sellers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true).ToList();
+                if (currentForm.NatureOfTheDeed == standardPatrimonyRegularisation)
                 {
-                    uncreditedOwnershipBuyer.OwnershipPercentage = ownershipPercentageToAssign;
+                    // se hace calculo de porcentajes para caso de cne 99
+                    List<Person> uncreditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == true).ToList();
+                    List<Person> creditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == false).ToList();
+                    double? ownershipPercentageToAssign = getAssignedOwnershipPercentage(creditedOwnershipBuyers, uncreditedOwnershipBuyers);
+                    // se asignan porcentajes para caso de cne 99
+                    foreach (var uncreditedOwnershipBuyer in uncreditedOwnershipBuyers)
+                    {
+                        uncreditedOwnershipBuyer.OwnershipPercentage = ownershipPercentageToAssign;
+
+                    }
+                    await AddNewMultiOwners(_context, buyers, currentForm);
+                }
+                else
+                {
+                    double? totalBuyersSum = buyers.Sum(item => item.OwnershipPercentage);
+                    // punto 4
+                    if (totalBuyersSum == 100)
+                    {
+                        List<string> ruts = sellers.Select(o => o.Rut).ToList();
+                        List<MultiOwner> sellerMultiOwners= new List<MultiOwner>();
+                        foreach (var rut in ruts)
+                        {
+                            MultiOwner sellerMultiOwner = _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
+                                                           m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
+                                                           m.ValidityYearFinish == null).
+                                                           OrderBy(tableKey => tableKey.Id).LastOrDefault();
+                            sellerMultiOwners.Add(sellerMultiOwner);
+                        }
+                        double? totalSellersSum = sellerMultiOwners?.Sum(m => m.OwnershipPercentage);
+                        System.Diagnostics.Debug.WriteLine(totalBuyersSum);
+                        System.Diagnostics.Debug.WriteLine(totalSellersSum);
+                        foreach (var buyer in buyers)
+                        {
+                            buyer.OwnershipPercentage = totalSellersSum*(buyer.OwnershipPercentage/100);
+                            System.Diagnostics.Debug.WriteLine(buyer.OwnershipPercentage);
+                        }
+                        await AddNewMultiOwners(_context, buyers, currentForm);
+                        foreach (var sellerMultiOwner in sellerMultiOwners)
+                        {
+                            sellerMultiOwner.ValidityYearFinish = adjustedYear;
+                        }
+                        await _context.SaveChangesAsync();
+                    }
 
                 }
-                await AddNewMultiOwners(_context, buyers, currentForm);
+                System.Diagnostics.Debug.WriteLine("Previo a cambiar el año");
                 await setFinalYearPreviousMultiOwners(_context, currentForm);
             }
         }
