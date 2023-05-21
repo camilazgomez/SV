@@ -415,6 +415,21 @@ namespace SV.Controllers
                         await _context.SaveChangesAsync();
                         await AddNewMultiOwners(_context, buyers, currentForm);
                     }
+                    else
+                    { // punto 6 no funca encontrar a los usarios hazlo con query a lo maldito
+                        foreach (var rut in ruts)
+                        {
+                            Person currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
+                                                    OrderBy(tableKey => tableKey.Id).LastOrDefault();
+                            MultiOwner currentMultiOwner = _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
+                                                       m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
+                                                       m.ValidityYearFinish == null).
+                                                       OrderBy(tableKey => tableKey.Id).LastOrDefault();
+                            currentMultiOwner.OwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
+                        }
+                        await AddNewMultiOwners(_context, buyers, currentForm);
+
+                    }
 
                 }
                 System.Diagnostics.Debug.WriteLine("Previo a cambiar el año");
