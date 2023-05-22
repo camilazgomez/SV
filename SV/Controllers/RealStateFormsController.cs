@@ -407,7 +407,9 @@ namespace SV.Controllers
                     // punto 5
                     else if (totalBuyersSum < 100 && totalBuyersSum > 0 && buyers.Count() == 1 && sellers.Count() == 1)
                     {
-                        buyers[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
+                        System.Diagnostics.Debug.WriteLine(sellerMultiOwners[0].OwnershipPercentage);
+                        System.Diagnostics.Debug.WriteLine(buyers[0].OwnershipPercentage);
+                        buyers[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage * buyers[0].OwnershipPercentage / 100;
                         sellerMultiOwners[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
                         await AddNewMultiOwners(_context, buyers, currentForm);
                     }
