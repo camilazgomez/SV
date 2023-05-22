@@ -224,7 +224,7 @@ namespace SV.Controllers
             {
                 double? ownershipPercentage;
                 bool uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
-                ownershipPercentage = getOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
+                ownershipPercentage = GetOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
                 bool validInputSeller = IsValidRut(form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
                 if (!validInputSeller)
                 {
@@ -244,7 +244,7 @@ namespace SV.Controllers
                 {
                     uncreditedClickedBuyer = true;
                 }
-                ownershipPercentage = getOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
+                ownershipPercentage = GetOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
                 bool validBuyerInput = IsValidRut(form["rutBuyer"][buyer]) && IsValidOwnershipPercentage(ownershipPercentage);
                 if (!validBuyerInput)
                 {
@@ -254,7 +254,7 @@ namespace SV.Controllers
             return true;
         }
 
-        private static double? getOwnershipPercentage(bool uncreditedPercentage, string ownershipPercentageFromForm)
+        private static double? GetOwnershipPercentage(bool uncreditedPercentage, string ownershipPercentageFromForm)
         {
             double? ownershipPercentage;
             if (uncreditedPercentage)
@@ -315,7 +315,7 @@ namespace SV.Controllers
             {
                 double? ownershipPercentage;
                 bool uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
-                ownershipPercentage = getOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
+                ownershipPercentage = GetOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
                 Person newSeller = new(form["rutSeller"][seller], ownershipPercentage, bool.Parse(form["uncreditedClickedSeller"][seller]), GetLastFormsRecord(_context).AttentionNumber, true, false);
                 _context.Add(newSeller);
                 await _context.SaveChangesAsync();
@@ -332,7 +332,7 @@ namespace SV.Controllers
                 {
                     uncreditedClickedBuyer = true;
                 }
-                ownershipPercentage = getOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
+                ownershipPercentage = GetOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
                 Person newBuyer = new(form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, GetLastFormsRecord(_context).AttentionNumber, false, true);
                 newBuyer.Rut = form["rutBuyer"][buyer];
                 _context.Add(newBuyer);
@@ -387,7 +387,7 @@ namespace SV.Controllers
             await AddNewMultiOwners(_context, buyers, currentForm);
             await setFinalYearPreviousMultiOwners(_context, currentForm);
         }
-            private static async Task ManageCompraventa(InscripcionesBrDbContext _context,  RealStateForm currentForm)
+        private static async Task ManageCompraventa(InscripcionesBrDbContext _context,  RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             List<Person> buyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false).ToList();
