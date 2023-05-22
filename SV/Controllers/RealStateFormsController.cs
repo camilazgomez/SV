@@ -418,8 +418,21 @@ namespace SV.Controllers
                     else if (totalBuyersSum < 100 && totalBuyersSum > 0 && buyers.Count() == 1 && sellers.Count() == 1)
                     {
                         buyers[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage * buyers[0].OwnershipPercentage / 100;
-                        sellerMultiOwners[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
-                        await AddNewMultiOwners(_context, buyers, currentForm);
+                        double? updatedOwnershipSeller = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
+                        if (sellerMultiOwners[0].ValidityYearBegin == adjustedYear)
+                        {
+                            sellerMultiOwners[0].OwnershipPercentage = updatedOwnershipSeller;
+                            await AddNewMultiOwners(_context, buyers, currentForm);
+                        }
+                        else
+                        {
+                            List<Person> newMultiOwnerRecords = new List<Person>();
+                            sellers[0].OwnershipPercentage = updatedOwnershipSeller;
+                            sellerMultiOwners[0].ValidityYearFinish = adjustedYear-1;
+                            newMultiOwnerRecords.AddRange(buyers);
+                            newMultiOwnerRecords.Add(sellers[0]);
+                            await AddNewMultiOwners(_context, newMultiOwnerRecords, currentForm);
+                        }
                     }
                     else
                     { // punto 6 
@@ -445,7 +458,8 @@ namespace SV.Controllers
                         System.Diagnostics.Debug.WriteLine(multiowner.Rut);
                         List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
                                                             item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                            && item.Rut == multiowner.Rut).ToList();
+                                                            && item.Rut == multiowner.Rut && item.ValidityYearBegin == multiowner.ValidityYearBegin)
+                                                            .ToList();
                         if (multiownersWithSameRut.Count() > 1 && !ruts.Contains(multiowner.Rut))
                         {
                             newRuts.Add(multiowner.Rut);
@@ -456,7 +470,8 @@ namespace SV.Controllers
                                     .ToList();
                     foreach (var rut in filteredRuts)
                     {
-                        MultiOwner multiOwnerHighestNumber = _context.MultiOwners.Where(item => item.Rut == rut).
+                        MultiOwner multiOwnerHighestNumber = _context.MultiOwners.Where(item => item.Rut == rut && item.Property == currentForm.Property &&
+                                                            item.Block == currentForm.Block && item.Commune == currentForm.Commune).
                                                         OrderByDescending(item => item.InscriptionNumber).FirstOrDefault();
                         List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
                                                             item.Block == currentForm.Block && item.Commune == currentForm.Commune
