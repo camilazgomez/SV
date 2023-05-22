@@ -418,9 +418,9 @@ namespace SV.Controllers
                             Person currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
                                                     OrderBy(tableKey => tableKey.Id).LastOrDefault();
                             MultiOwner currentMultiOwner = _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
-                                                       m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
-                                                       m.ValidityYearFinish == null).
-                                                       OrderBy(tableKey => tableKey.Id).LastOrDefault();
+                                                               m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
+                                                               m.ValidityYearFinish == null).
+                                                               OrderBy(tableKey => tableKey.Id).LastOrDefault();
                             currentMultiOwner.OwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
                         }
                         await AddNewMultiOwners(_context, buyers, currentForm);
@@ -458,11 +458,53 @@ namespace SV.Controllers
                         MultiOwner multiOwnerToMerge = new MultiOwner(multiOwnerHighestNumber.Rut, mergeOwnership,
                                             currentForm.Commune, currentForm.Block, currentForm.Property,
                                             currentForm.Sheets, currentForm.InscriptionDate,
-                                            currentForm.InscriptionNumber, adjustedYear, multiOwnerHighestNumber.ValidityYearFinish);
+                                            multiOwnerHighestNumber.InscriptionNumber, adjustedYear, multiOwnerHighestNumber.ValidityYearFinish);
                         _context.Add(multiOwnerToMerge);
-                        
                         _context.RemoveRange(multiownersWithSameRut);
                     }
+                    // punto 8
+                    List<MultiOwner> negativeOwnershipMultiOwners = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
+                                                            item.Block == currentForm.Block && item.Commune == currentForm.Commune &&
+                                                            item.OwnershipPercentage<0)
+                                                            .ToList();
+                    foreach(var negativeOwner in negativeOwnershipMultiOwners)
+                    {
+                        MultiOwner correctedMultiOwner = new MultiOwner(negativeOwner.Rut, 0,
+                                            currentForm.Commune, currentForm.Block, currentForm.Property,
+                                            currentForm.Sheets, currentForm.InscriptionDate,
+                                            negativeOwner.InscriptionNumber, negativeOwner.ValidityYearBegin, negativeOwner.ValidityYearFinish);
+                        _context.Add(correctedMultiOwner);
+                    }
+                    _context.RemoveRange(negativeOwnershipMultiOwners);
+                    await _context.SaveChangesAsync();
+                    //punto 9
+                    List<MultiOwner> sameYearMultiOwners = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
+                                                            item.Block == currentForm.Block && item.Commune == currentForm.Commune
+                                                            && item.ValidityYearBegin <= adjustedYear && 
+                                                            (item.ValidityYearFinish == null || item.ValidityYearFinish > adjustedYear ))
+                                                            .ToList();
+                    System.Diagnostics.Debug.WriteLine(sameYearMultiOwners.Count());
+                    double? sumOfOwnerships = sameYearMultiOwners.Sum(item=> item.OwnershipPercentage);
+                    foreach(var sameYear in sameYearMultiOwners)
+                    {
+                        System.Diagnostics.Debug.WriteLine(sameYear.Rut);
+                        System.Diagnostics.Debug.WriteLine(sameYear.OwnershipPercentage);
+                    }
+                    System.Diagnostics.Debug.WriteLine(sumOfOwnerships);
+                    if (sumOfOwnerships >  100)
+                    {
+                        double? ratio = 100/sumOfOwnerships;
+                        foreach (var owner in sameYearMultiOwners)
+                        {
+                            MultiOwner correctedMultiOwner = new MultiOwner(owner.Rut, owner.OwnershipPercentage*ratio,
+                                            currentForm.Commune, currentForm.Block, currentForm.Property,
+                                            currentForm.Sheets, currentForm.InscriptionDate,
+                                            owner.InscriptionNumber, owner.ValidityYearBegin, owner.ValidityYearFinish);
+                            _context.Add(correctedMultiOwner);
+                        }
+                        _context.RemoveRange(sameYearMultiOwners);
+                    }
+
                     await _context.SaveChangesAsync();
                 }
                 await setFinalYearPreviousMultiOwners(_context, currentForm);
@@ -579,54 +621,6 @@ namespace SV.Controllers
                 adjustedYear = 2019;
             }
             return adjustedYear;
-        }
-
-        private static async Task CleanMultiOwnerTable(InscripcionesBrDbContext _context)
-        {
-            RealStateForm currentForm = GetLastFormsRecord(_context);
-            int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
-
-            // punto 7
-            System.Diagnostics.Debug.WriteLine("consultamos registro");
-
-            List<MultiOwner> multiowners = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune).ToList();
-
-            List<String> ruts = new();
-            List<MultiOwner> multiownersToDelete = new List<MultiOwner>();
-            foreach (var multiowner in multiowners) 
-            {
-                System.Diagnostics.Debug.WriteLine(multiowner.Rut);
-                List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                    && item.Rut == multiowner.Rut).ToList();
-                if (multiownersWithSameRut.Count() > 1 && !ruts.Contains(multiowner.Rut))
-                {
-                    ruts.Add(multiowner.Rut);
-                    System.Diagnostics.Debug.WriteLine("Added");
-                }
-            }
-
-            foreach(var rut in ruts)
-            {
-                MultiOwner multiOwnerToMerge = _context.MultiOwners.Where(item => item.Rut == rut).
-                                                OrderByDescending(item => item.InscriptionNumber).FirstOrDefault();
-                List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                    && item.Rut == rut).ToList();
-                double? mergeOwnership = multiownersWithSameRut.Sum(item => item.OwnershipPercentage);
-                multiOwnerToMerge.OwnershipPercentage = mergeOwnership;
-                _context.Update(multiOwnerToMerge);
-                System.Diagnostics.Debug.WriteLine(multiOwnerToMerge.OwnershipPercentage);
-                
-                /*
-                List<MultiOwner> multiOwnersToDelete = _context.MultiOwners.Where(item => item.Rut == rut &&
-                                                       item.InscriptionNumber != multiOwnerToMerge.InscriptionNumber).
-                                                       ToList();
-                _context.RemoveRange(multiOwnersToDelete);
-                */
-            }
-            await _context.SaveChangesAsync();
         }
     }
 }
