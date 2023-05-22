@@ -16,7 +16,7 @@ using SV.Models;
 using System.Linq;
 using static System.Net.Mime.MediaTypeNames;
 using System.Collections;
-
+using Microsoft.EntityFrameworkCore.Metadata;
 
 namespace SV.Controllers
 {
@@ -34,7 +34,7 @@ namespace SV.Controllers
         // GET: RealStateForms
         public async Task<IActionResult> Index()
         {
-            return _context.RealStateForms != null ? 
+            return _context.RealStateForms != null ?
                           View(await _context.RealStateForms.ToListAsync()) :
                           Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
         }
@@ -55,7 +55,7 @@ namespace SV.Controllers
                 return NotFound();
             }
             expandedDetailsOfForms viewData = new();
-            viewData.Sellers = _context.People.Where(s=> s.FormsId == id && s.Seller == true).ToList();
+            viewData.Sellers = _context.People.Where(s => s.FormsId == id && s.Seller == true).ToList();
             viewData.Buyers = _context.People.Where(s => s.FormsId == id && s.Seller == false).ToList();
             viewData.RealStateForm = realStateForm;
             return View(viewData);
@@ -65,7 +65,7 @@ namespace SV.Controllers
         public IActionResult Create()
         {
             ViewBag.Communes = _context.Commune.ToList();
-            
+
             return View();
         }
 
@@ -99,7 +99,7 @@ namespace SV.Controllers
                         await _context.SaveChangesAsync();
                         ViewBag.Communes = _context.Commune.ToList();
                         return View(realStateForm);
-                    } 
+                    }
                 }
                 List<string?> buyersOwnershipPercentage = Request.Form["ownershipPercentageBuyer"].ToList();
                 bool isValidBuyerOwnershipPercentageSum = IsValidBuyersOwnershipPercentageSum(buyersOwnershipPercentage);
@@ -125,7 +125,7 @@ namespace SV.Controllers
             ViewBag.Communes = _context.Commune.ToList();
             return View(realStateForm);
         }
-        
+
         // GET: RealStateForms/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
@@ -215,7 +215,7 @@ namespace SV.Controllers
 
         private bool RealStateFormExists(int id)
         {
-          return (_context.RealStateForms?.Any(e => e.AttentionNumber == id)).GetValueOrDefault();
+            return (_context.RealStateForms?.Any(e => e.AttentionNumber == id)).GetValueOrDefault();
         }
 
         private static bool AreValidFormSellers(IFormCollection form)
@@ -345,7 +345,7 @@ namespace SV.Controllers
             RealStateForm currentForm = GetLastFormsRecord(_context);
             bool addToTable = true;
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
-            if (CheckYearAlreadyExists(currentForm,_context) && currentForm.NatureOfTheDeed == standardPatrimonyRegularisation)
+            if (CheckYearAlreadyExists(currentForm, _context) && currentForm.NatureOfTheDeed == standardPatrimonyRegularisation)
             {
                 List<MultiOwner> higherInscriptionNumberMultiOwners = GetMultiOwnersWithHigherInscriptionNumber(_context, currentForm);
                 List<MultiOwner> previousMultiOwners = GetMultiOwnersWithLowerInscriptionNumber(_context, currentForm);
@@ -354,8 +354,8 @@ namespace SV.Controllers
                 {
                     _context.MultiOwners.RemoveRange(previousMultiOwners);
                 }
-                else { 
-                    addToTable = false; 
+                else {
+                    addToTable = false;
                 }
             }
             if (addToTable)
@@ -385,9 +385,9 @@ namespace SV.Controllers
 
             }
             await AddNewMultiOwners(_context, buyers, currentForm);
-            await setFinalYearPreviousMultiOwners(_context, currentForm);
+            await SetFinalYearPreviousMultiOwners(_context, currentForm);
         }
-        private static async Task ManageCompraventa(InscripcionesBrDbContext _context,  RealStateForm currentForm)
+        private static async Task ManageCompraventa(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             List<Person> buyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false).ToList();
@@ -410,46 +410,21 @@ namespace SV.Controllers
             // punto 4
             if (totalBuyersSum == 100)
             {
-                double? totalSellersSum = sellerMultiOwners?.Sum(m => m.OwnershipPercentage);
-                foreach (var buyer in buyers)
-                {
-                    buyer.OwnershipPercentage = totalSellersSum * (buyer.OwnershipPercentage / 100);
-
-                }
+                AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
                 await AddNewMultiOwners(_context, buyers, currentForm);
                 List<MultiOwner> multiownersToDelete = new List<MultiOwner>();
-                foreach (var sellerMultiOwner in sellerMultiOwners)
-                {
-                    if (sellerMultiOwner.ValidityYearBegin < adjustedYear)
-                    {
-                        sellerMultiOwner.ValidityYearFinish = adjustedYear - 1;
-                    }
-                    else
-                    {
-                        multiownersToDelete.Add(sellerMultiOwner);
-                    }
-                }
+                SetMultiOwnersToDelete(ref multiownersToDelete, sellerMultiOwners, adjustedYear);
                 _context.RemoveRange(multiownersToDelete);
             }
             // punto 5
             else if (totalBuyersSum < 100 && totalBuyersSum > 0 && buyers.Count() == 1 && sellers.Count() == 1)
             {
-                buyers[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage * buyers[0].OwnershipPercentage / 100;
+                AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
                 double? updatedOwnershipSeller = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
-                if (sellerMultiOwners[0].ValidityYearBegin == adjustedYear)
-                {
-                    sellerMultiOwners[0].OwnershipPercentage = updatedOwnershipSeller;
-                    await AddNewMultiOwners(_context, buyers, currentForm);
-                }
-                else
-                {
-                    List<Person> newMultiOwnerRecords = new List<Person>();
-                    Person sellerUpdated = new(sellers[0].Rut, updatedOwnershipSeller, false, sellers[0].FormsId, sellers[0].Seller, sellers[0].Heir);
-                    sellerMultiOwners[0].ValidityYearFinish = adjustedYear - 1;
-                    newMultiOwnerRecords.AddRange(buyers);
-                    newMultiOwnerRecords.Add(sellers[0]);
-                    await AddNewMultiOwners(_context, newMultiOwnerRecords, currentForm);
-                }
+                MultiOwner sellerMO = sellerMultiOwners[0];
+                Person seller = sellers[0];
+                SetMultiOwnerRecords(adjustedYear, ref sellerMO, updatedOwnershipSeller, ref seller, ref buyers);
+                await AddNewMultiOwners(_context, buyers, currentForm);
             }
             else
             { // punto 6 
@@ -461,70 +436,20 @@ namespace SV.Controllers
                                                        m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
                                                        m.ValidityYearFinish == null).
                                                        OrderBy(tableKey => tableKey.Id).LastOrDefault();
-                    if (currentMultiOwner.ValidityYearBegin == adjustedYear)
-                    {
-                        currentMultiOwner.OwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
-                    }
-                    else
-                    {
-                        currentMultiOwner.ValidityYearFinish = adjustedYear - 1;
-                        currentSeller.OwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
-                        buyers.Add(currentSeller);
-                    }
+
+                    double? newOwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
+                    SetMultiOwnerRecords(adjustedYear, ref currentMultiOwner, newOwnershipPercentage, ref currentSeller, ref buyers);
                 }
                 await AddNewMultiOwners(_context, buyers, currentForm);
             }
             // mantención de registros viejos
-            foreach (var owner in allOwnersForPeriod)
-            {
-                if (!sellerMultiOwners.Contains(owner) && owner.ValidityYearBegin != adjustedYear)
-                {
-                    MultiOwner previousMultiOwner = new MultiOwner(owner.Rut, owner.OwnershipPercentage,
-                                    currentForm.Commune, currentForm.Block, currentForm.Property,
-                                    currentForm.Sheets, currentForm.InscriptionDate,
-                                    owner.InscriptionNumber, owner.ValidityYearBegin, adjustedYear - 1);
-                    owner.ValidityYearBegin = adjustedYear;
-                    _context.Add(previousMultiOwner);
-                }
-            }
+            OldRecordKeeping(_context, currentForm, allOwnersForPeriod, sellerMultiOwners, adjustedYear);
+
             // punto 7
             List<MultiOwner> allMultiOwners = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
                                                     item.Block == currentForm.Block && item.Commune == currentForm.Commune)
                                                     .ToList();
-            List<String> newRuts = new();
-            foreach (var multiowner in allMultiOwners)
-            {
-                List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                    && item.Rut == multiowner.Rut && item.ValidityYearBegin == multiowner.ValidityYearBegin)
-                                                    .ToList();
-                if (multiownersWithSameRut.Count() > 1 && !ruts.Contains(multiowner.Rut))
-                {
-                    newRuts.Add(multiowner.Rut);
-                }
-            }
-            List<string> filteredRuts = newRuts
-                            .Where((s, index) => index % 2 == 0) // Filter by index being even (pair)
-                            .ToList();
-            foreach (var rut in filteredRuts)
-            {
-                MultiOwner multiOwnerHighestNumber = _context.MultiOwners.Where(item => item.Rut == rut && item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune).
-                                                OrderByDescending(item => item.InscriptionNumber).FirstOrDefault();
-                List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                    && item.Rut == rut).ToList();
-                List<MultiOwner> multiownersToDelete = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                    && item.Rut == rut && item.InscriptionNumber != multiOwnerHighestNumber.InscriptionNumber).ToList();
-                double? mergeOwnership = multiownersWithSameRut.Sum(item => item.OwnershipPercentage);
-                MultiOwner multiOwnerToMerge = new MultiOwner(multiOwnerHighestNumber.Rut, mergeOwnership,
-                                    currentForm.Commune, currentForm.Block, currentForm.Property,
-                                    currentForm.Sheets, currentForm.InscriptionDate,
-                                    multiOwnerHighestNumber.InscriptionNumber, adjustedYear, multiOwnerHighestNumber.ValidityYearFinish);
-                _context.Add(multiOwnerToMerge);
-                _context.RemoveRange(multiownersWithSameRut);
-            }
+            MergeDuplicateRegisters(_context, currentForm, adjustedYear, allMultiOwners, ruts);
             // punto 8
             List<MultiOwner> negativeOwnershipMultiOwners = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
                                                     item.Block == currentForm.Block && item.Commune == currentForm.Commune &&
@@ -592,7 +517,7 @@ namespace SV.Controllers
             await _context.SaveChangesAsync();
         }
 
-        private static async Task setFinalYearPreviousMultiOwners(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        private static async Task SetFinalYearPreviousMultiOwners(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             List<MultiOwner> previousMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.ValidityYearFinish == null
@@ -608,7 +533,101 @@ namespace SV.Controllers
 
         private static RealStateForm GetLastFormsRecord(InscripcionesBrDbContext _context)
         {
-           return  _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
+            return _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
+        }
+
+        private static void AssignCompraventaOwnershipPercentage(List<Person> buyers, List<MultiOwner> sellers)
+        {
+            double? totalSellersSum = sellers?.Sum(m => m.OwnershipPercentage);
+            foreach (var buyer in buyers)
+            {
+                buyer.OwnershipPercentage = totalSellersSum * (buyer.OwnershipPercentage / 100);
+
+            }
+        }
+
+        private static void MergeDuplicateRegisters(InscripcionesBrDbContext _context, RealStateForm currentForm, int adjustedYear, List<MultiOwner> allMultiOwners, List<string> ruts)
+        {
+            List<String> newRuts = new();
+            foreach (var multiowner in allMultiOwners)
+            {
+                List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
+                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
+                                                    && item.Rut == multiowner.Rut && item.ValidityYearBegin == multiowner.ValidityYearBegin)
+                                                    .ToList();
+                if (multiownersWithSameRut.Count() > 1 && !ruts.Contains(multiowner.Rut))
+                {
+                    newRuts.Add(multiowner.Rut);
+                }
+            }
+            List<string> filteredRuts = newRuts
+                            .Where((s, index) => index % 2 == 0) // Filter by index being even (pair)
+                            .ToList();
+            foreach (var rut in filteredRuts)
+            {
+                MultiOwner multiOwnerHighestNumber = _context.MultiOwners.Where(item => item.Rut == rut && item.Property == currentForm.Property &&
+                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune).
+                                                OrderByDescending(item => item.InscriptionNumber).FirstOrDefault();
+                List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
+                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
+                                                    && item.Rut == rut).ToList();
+                List<MultiOwner> multiownersToDelete = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
+                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
+                                                    && item.Rut == rut && item.InscriptionNumber != multiOwnerHighestNumber.InscriptionNumber).ToList();
+                double? mergeOwnership = multiownersWithSameRut.Sum(item => item.OwnershipPercentage);
+                MultiOwner multiOwnerToMerge = new MultiOwner(multiOwnerHighestNumber.Rut, mergeOwnership,
+                                    currentForm.Commune, currentForm.Block, currentForm.Property,
+                                    currentForm.Sheets, currentForm.InscriptionDate,
+                                    multiOwnerHighestNumber.InscriptionNumber, adjustedYear, multiOwnerHighestNumber.ValidityYearFinish);
+                _context.Add(multiOwnerToMerge);
+                _context.RemoveRange(multiownersWithSameRut);
+            }
+        }
+
+        private static void OldRecordKeeping(InscripcionesBrDbContext _context, RealStateForm currentForm, List<MultiOwner> allOwnersForPeriod, List<MultiOwner> sellerMultiOwners, int adjustedYear)
+        {
+            foreach (var owner in allOwnersForPeriod)
+            {
+                if (!sellerMultiOwners.Contains(owner) && owner.ValidityYearBegin != adjustedYear)
+                {
+                    MultiOwner previousMultiOwner = new MultiOwner(owner.Rut, owner.OwnershipPercentage,
+                                    currentForm.Commune, currentForm.Block, currentForm.Property,
+                                    currentForm.Sheets, currentForm.InscriptionDate,
+                                    owner.InscriptionNumber, owner.ValidityYearBegin, adjustedYear - 1);
+                    owner.ValidityYearBegin = adjustedYear;
+                    _context.Add(previousMultiOwner);
+                }
+            }
+        }
+
+        private static void SetMultiOwnerRecords(int adjustedYear, ref MultiOwner multiOwner, double? ownershipPercentage, ref Person seller, ref List<Person> buyers)
+        {
+            if (multiOwner.ValidityYearBegin == adjustedYear)
+            {
+                multiOwner.OwnershipPercentage = ownershipPercentage;
+            }
+            else
+            {
+                multiOwner.ValidityYearFinish = adjustedYear - 1;
+                seller.OwnershipPercentage = ownershipPercentage;
+                buyers.Add(seller);
+            }
+
+        }
+
+        private static void SetMultiOwnersToDelete(ref List<MultiOwner> multiownersToDelete, List<MultiOwner> sellerMultiOwners, int adjustedYear)
+        {
+            foreach (var sellerMultiOwner in sellerMultiOwners)
+            {
+                if (sellerMultiOwner.ValidityYearBegin < adjustedYear)
+                {
+                    sellerMultiOwner.ValidityYearFinish = adjustedYear - 1;
+                }
+                else
+                {
+                    multiownersToDelete.Add(sellerMultiOwner);
+                }
+            }
         }
 
         private static bool CheckYearAlreadyExists(RealStateForm realStateForm, InscripcionesBrDbContext _context)
