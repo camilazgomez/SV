@@ -347,8 +347,8 @@ namespace SV.Controllers
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             if (CheckYearAlreadyExists(currentForm,_context) && currentForm.NatureOfTheDeed == standardPatrimonyRegularisation)
             {
-                List<MultiOwner> higherInscriptionNumberMultiOwners = getMultiOwnersWithHigherInscriptionNumber(_context, currentForm);
-                List<MultiOwner> previousMultiOwners = getMultiOwnersWithLowerInscriptionNumber(_context, currentForm);
+                List<MultiOwner> higherInscriptionNumberMultiOwners = GetMultiOwnersWithHigherInscriptionNumber(_context, currentForm);
+                List<MultiOwner> previousMultiOwners = GetMultiOwnersWithLowerInscriptionNumber(_context, currentForm);
                 bool latestmultiOwner = previousMultiOwners.Count() >= 0 && higherInscriptionNumberMultiOwners.Count() == 0;
                 if (latestmultiOwner)
                 {
@@ -377,7 +377,7 @@ namespace SV.Controllers
             // se hace calculo de porcentajes para caso de cne 99
             List<Person> uncreditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == true).ToList();
             List<Person> creditedOwnershipBuyers = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == false && s.UncreditedOwnership == false).ToList();
-            double? ownershipPercentageToAssign = getAssignedOwnershipPercentage(creditedOwnershipBuyers, uncreditedOwnershipBuyers);
+            double? ownershipPercentageToAssign = GetAssignedOwnershipPercentage(creditedOwnershipBuyers, uncreditedOwnershipBuyers);
             // se asignan porcentajes para caso de cne 99
             foreach (var uncreditedOwnershipBuyer in uncreditedOwnershipBuyers)
             {
@@ -567,7 +567,7 @@ namespace SV.Controllers
         private static async Task AddNewMultiOwners(InscripcionesBrDbContext _context, List<Person> buyers, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
-            MultiOwner? nextBuyer = findNextOwner(_context, currentForm);
+            MultiOwner? nextBuyer = FindNextOwner(_context, currentForm);
             foreach (var buyer in buyers)
             {
                 if (nextBuyer != null)
@@ -625,7 +625,7 @@ namespace SV.Controllers
             return false;
         }
 
-        private static List<MultiOwner> getMultiOwnersWithHigherInscriptionNumber(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        private static List<MultiOwner> GetMultiOwnersWithHigherInscriptionNumber(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             var queryMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber > currentForm.InscriptionNumber &&
@@ -635,7 +635,7 @@ namespace SV.Controllers
             return queryMultiOwners;
         }
 
-        private static List<MultiOwner> getMultiOwnersWithLowerInscriptionNumber(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        private static List<MultiOwner> GetMultiOwnersWithLowerInscriptionNumber(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             var queryMultiOwners = _context.MultiOwners.Where(multiowner => multiowner.InscriptionNumber < currentForm.InscriptionNumber &&
@@ -645,7 +645,7 @@ namespace SV.Controllers
             return queryMultiOwners;
         }
 
-        private static MultiOwner findNextOwner(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        private static MultiOwner FindNextOwner(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             var queryMultiOwner = _context.MultiOwners.Where(multiowner => multiowner.ValidityYearBegin > adjustedYear &&
@@ -655,7 +655,7 @@ namespace SV.Controllers
             return queryMultiOwner;
         }
 
-        private static double? getAssignedOwnershipPercentage(List<Person> creditedOwnershipBuyers, List<Person> uncreditedOwnershipBuyers)
+        private static double? GetAssignedOwnershipPercentage(List<Person> creditedOwnershipBuyers, List<Person> uncreditedOwnershipBuyers)
         {
             double? sumCreditedOwnershipPercentage = 0;
             foreach (var creditedPercentageBuyer in creditedOwnershipBuyers)
