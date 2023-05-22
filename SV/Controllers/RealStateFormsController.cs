@@ -400,10 +400,19 @@ namespace SV.Controllers
 
                         }
                         await AddNewMultiOwners(_context, buyers, currentForm);
+                        List<MultiOwner> multiownersToDelete = new List<MultiOwner>();
                         foreach (var sellerMultiOwner in sellerMultiOwners)
                         {
-                            sellerMultiOwner.ValidityYearFinish = adjustedYear-1;
+                            if(sellerMultiOwner.ValidityYearBegin < adjustedYear) 
+                            {
+                                sellerMultiOwner.ValidityYearFinish = adjustedYear - 1;
+                            }
+                            else
+                            {
+                                multiownersToDelete.Add(sellerMultiOwner);
+                            }
                         }
+                        _context.RemoveRange(multiownersToDelete);
                     }
                     // punto 5
                     else if (totalBuyersSum < 100 && totalBuyersSum > 0 && buyers.Count() == 1 && sellers.Count() == 1)
