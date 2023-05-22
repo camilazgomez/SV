@@ -375,6 +375,7 @@ namespace SV.Controllers
 
                     }
                     await AddNewMultiOwners(_context, buyers, currentForm);
+                    await setFinalYearPreviousMultiOwners(_context, currentForm);
                 }
                 else
                 {
@@ -401,14 +402,12 @@ namespace SV.Controllers
                         await AddNewMultiOwners(_context, buyers, currentForm);
                         foreach (var sellerMultiOwner in sellerMultiOwners)
                         {
-                            sellerMultiOwner.ValidityYearFinish = adjustedYear;
+                            sellerMultiOwner.ValidityYearFinish = adjustedYear-1;
                         }
                     }
                     // punto 5
                     else if (totalBuyersSum < 100 && totalBuyersSum > 0 && buyers.Count() == 1 && sellers.Count() == 1)
                     {
-                        System.Diagnostics.Debug.WriteLine(sellerMultiOwners[0].OwnershipPercentage);
-                        System.Diagnostics.Debug.WriteLine(buyers[0].OwnershipPercentage);
                         buyers[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage * buyers[0].OwnershipPercentage / 100;
                         sellerMultiOwners[0].OwnershipPercentage = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
                         await AddNewMultiOwners(_context, buyers, currentForm);
@@ -509,7 +508,6 @@ namespace SV.Controllers
 
                     await _context.SaveChangesAsync();
                 }
-                await setFinalYearPreviousMultiOwners(_context, currentForm);
             }
         }
 
