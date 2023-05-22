@@ -7,7 +7,7 @@ GO
 
 CREATE TABLE [dbo].[Persona] (
     [Id]              INT           IDENTITY (1, 1) NOT NULL,
-    [Rut]             NVARCHAR (10) NULL,
+    [Rut]             NVARCHAR (12) NULL,
     [Nombre]          NVARCHAR (50) NOT NULL,
     [FechaNacimiento] DATE          NOT NULL,
     [Email]           NCHAR (50)    NOT NULL,
