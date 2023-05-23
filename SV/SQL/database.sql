@@ -7,7 +7,7 @@ GO
 
 CREATE TABLE [dbo].[Persona] (
     [Id]              INT           IDENTITY (1, 1) NOT NULL,
-    [Rut]             NVARCHAR (12) NULL,
+    [Rut]             NVARCHAR (13) NULL,
     [Nombre]          NVARCHAR (50) NOT NULL,
     [FechaNacimiento] DATE          NOT NULL,
     [Email]           NCHAR (50)    NOT NULL,
@@ -34,7 +34,7 @@ GO
 
 CREATE TABLE [dbo].[MultiOwner] (
     [Id]                  INT           IDENTITY (1, 1) NOT NULL,
-    [rut]                 NCHAR (10)    NULL,
+    [rut]                 NCHAR (13)    NULL,
     [ownershipPercentage] FLOAT (53)    NULL,
     [commune]             VARCHAR (MAX) NOT NULL,
     [block]               VARCHAR (MAX) NOT NULL,
@@ -50,7 +50,7 @@ GO
 
 CREATE TABLE [dbo].[People] (
     [Id]                  INT        IDENTITY (1, 1) NOT NULL,
-    [rut]                 NCHAR (10) NULL,
+    [rut]                 NCHAR (13) NULL,
     [ownershipPercentage] FLOAT (53) NULL,
     [uncreditedOwnership] BIT        NULL,
     [formsId]             INT        NULL,
