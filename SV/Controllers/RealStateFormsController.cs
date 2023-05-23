@@ -607,7 +607,7 @@ namespace SV.Controllers
         }
 
 
-            private static async Task AdjustPercentages(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        private static async Task AdjustPercentages(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             List<MultiOwner> zeroOwnershipMultiOwners = GetOwnersWithNoPercentage(_context, currentForm);
