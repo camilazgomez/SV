@@ -429,6 +429,9 @@ namespace SV.Controllers
             MergeDuplicateRegisters(_context, currentForm, adjustedYear, ruts);
             await SetNegativePercentagesToZero(_context, currentForm);
             await AdjustPercentages(_context, currentForm);
+            List<MultiOwner> zeroOwnershipMultiOwners = GetOwnersWithNoPercentage(_context, currentForm);
+            _context.RemoveRange(zeroOwnershipMultiOwners);
+            await _context.SaveChangesAsync();
         }
 
         private static async Task AddNewMultiOwners(InscripcionesBrDbContext _context, List<Person> buyers, RealStateForm currentForm)
@@ -637,9 +640,9 @@ namespace SV.Controllers
                                     currentForm.Sheets, currentForm.InscriptionDate,
                                     owner.InscriptionNumber, owner.ValidityYearBegin, owner.ValidityYearFinish);
                     _context.Add(correctedMultiOwner);
+                    _context.RemoveRange(zeroOwnershipMultiOwners);
                 }
             }
-            _context.RemoveRange(zeroOwnershipMultiOwners);
             await _context.SaveChangesAsync();
         }
 
