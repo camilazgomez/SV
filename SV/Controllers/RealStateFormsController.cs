@@ -25,7 +25,8 @@ namespace SV.Controllers
         private readonly InscripcionesBrDbContext _context;
         private IFormCollection form;
         private const string standardPatrimonyRegularisation = "Regularización de Patrimonio";
-
+        private const int limitYear = 2019;
+        private const int pairIdentifier = 2;
         public RealStateFormsController(InscripcionesBrDbContext context)
         {
             _context = context;
@@ -427,7 +428,7 @@ namespace SV.Controllers
             OldRecordKeeping(_context, currentForm, allOwnersForPeriod, sellerMultiOwners, adjustedYear);
             MergeDuplicateRegisters(_context, currentForm, adjustedYear, ruts);
             await SetNegativePercentagesToZero(_context, currentForm);
-            await AdjustPercentagesPastLimit(_context, currentForm);
+            await AdjustPercentages(_context, currentForm);
         }
 
         private static async Task AddNewMultiOwners(InscripcionesBrDbContext _context, List<Person> buyers, RealStateForm currentForm)
@@ -472,6 +473,13 @@ namespace SV.Controllers
             }
         }
 
+        private static List<MultiOwner> GetOwnersWithNoPercentage(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        {
+            List<MultiOwner> ownersWithNoPercentage = _context.MultiOwners.Where(multiowner =>  multiowner.Block == currentForm.Block && multiowner.Commune == currentForm.Commune &&
+                                                multiowner.Property == currentForm.Property && multiowner.OwnershipPercentage == 0).ToList();
+            return ownersWithNoPercentage;
+        }
+
         private static RealStateForm GetLastFormsRecord(InscripcionesBrDbContext _context)
         {
             return _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
@@ -505,7 +513,7 @@ namespace SV.Controllers
                 }
             }
             List<string> filteredRuts = newRuts
-                            .Where((s, index) => index % 2 == 0) // Filter by index being even (pair)
+                            .Where((s, index) => index % pairIdentifier == 0) 
                             .ToList();
             foreach (var rut in filteredRuts)
             {
@@ -594,15 +602,17 @@ namespace SV.Controllers
         }
 
 
-            private static async Task AdjustPercentagesPastLimit(InscripcionesBrDbContext _context, RealStateForm currentForm)
+            private static async Task AdjustPercentages(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
+            List<MultiOwner> zeroOwnershipMultiOwners = GetOwnersWithNoPercentage(_context, currentForm);
             List<MultiOwner> sameYearMultiOwners = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
                                                     item.Block == currentForm.Block && item.Commune == currentForm.Commune
                                                     && item.ValidityYearBegin <= adjustedYear &&
                                                     (item.ValidityYearFinish == null || item.ValidityYearFinish > adjustedYear))
                                                     .ToList();
             double? sumOfOwnerships = sameYearMultiOwners.Sum(item => item.OwnershipPercentage);
+            int numberOfOwners = zeroOwnershipMultiOwners.Count();
             if (sumOfOwnerships > 100)
             {
                 double? ratio = 100 / sumOfOwnerships;
@@ -616,6 +626,20 @@ namespace SV.Controllers
                 }
                 _context.RemoveRange(sameYearMultiOwners);
             }
+            else if (sumOfOwnerships < 100 && numberOfOwners > 0)
+            {
+                foreach (var owner in zeroOwnershipMultiOwners)
+                {
+                    
+                    double? partedOwnership = (100-sumOfOwnerships) / numberOfOwners;
+                    MultiOwner correctedMultiOwner = new MultiOwner(owner.Rut, partedOwnership,
+                                    currentForm.Commune, currentForm.Block, currentForm.Property,
+                                    currentForm.Sheets, currentForm.InscriptionDate,
+                                    owner.InscriptionNumber, owner.ValidityYearBegin, owner.ValidityYearFinish);
+                    _context.Add(correctedMultiOwner);
+                }
+            }
+            _context.RemoveRange(zeroOwnershipMultiOwners);
             await _context.SaveChangesAsync();
         }
 
@@ -623,9 +647,9 @@ namespace SV.Controllers
         {
             int year = AdjustYear(realStateForm.InscriptionDate.Year);  
             System.Diagnostics.Debug.WriteLine(year);
-            List<MultiOwner> multiOwnersOfGivenYear = _context.MultiOwners.Where(multiowner => multiowner.InscriptionDate.Year == year &&
-                                                 multiowner.Block == realStateForm.Block && multiowner.Commune == realStateForm.Commune &&
-                                                 multiowner.Property == realStateForm.Property).ToList();
+            List<MultiOwner> multiOwnersOfGivenYear = _context.MultiOwners.Where(multiowner => multiowner.InscriptionDate.Year == 
+                                     year && multiowner.Block == realStateForm.Block && multiowner.Commune == realStateForm.Commune 
+                                     && multiowner.Property == realStateForm.Property).ToList();
             if (multiOwnersOfGivenYear.Count()>=0)
             {
                 return true;
@@ -708,8 +732,8 @@ namespace SV.Controllers
         private static int AdjustYear(int year)
         {
             int adjustedYear = year;
-            if (year < 2019) {
-                adjustedYear = 2019;
+            if (year < limitYear) {
+                adjustedYear = limitYear;
             }
             return adjustedYear;
         }
