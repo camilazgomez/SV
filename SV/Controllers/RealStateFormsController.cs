@@ -396,6 +396,8 @@ namespace SV.Controllers
             List<string> ruts = sellers.Select(o => o.Rut).ToList();
             List<MultiOwner> allOwnersForPeriod = GetAllOwnersFromPeriod(_context);
             List<MultiOwner> sellerMultiOwners = GetSellerOwnersFromPeriod(_context, ruts);
+            bool totalBuyersSumBetween100And0 = totalBuyersSum < 100 && totalBuyersSum > 0;
+            bool oneBuyerAndOneSeller = buyers.Count() == 1 && sellers.Count() == 1;
             if (totalBuyersSum == 100)
             {
                 AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
@@ -404,7 +406,7 @@ namespace SV.Controllers
                 SetMultiOwnersToDelete(ref multiownersToDelete, sellerMultiOwners, adjustedYear);
                 _context.RemoveRange(multiownersToDelete);
             }
-            else if (totalBuyersSum < 100 && totalBuyersSum > 0 && buyers.Count() == 1 && sellers.Count() == 1)
+            else if (totalBuyersSumBetween100And0 && oneBuyerAndOneSeller)
             {
                 AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
                 double? updatedOwnershipSeller = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
