@@ -707,11 +707,11 @@ namespace SV.Controllers
         public static bool IsValidInscriptionDate(string formDate)
         {
             var today = DateTime.Now;
-            var date = DateTime.Parse(formDate, CultureInfo.InvariantCulture);
+            var date = DateTime.Parse(formDate);
 
             int compareResult = DateTime.Compare(today, date);
 
-            if (compareResult > 0)
+            if (compareResult < 0)
             {
                 return false;
             }
