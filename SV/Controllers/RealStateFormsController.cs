@@ -18,6 +18,7 @@ using static System.Net.Mime.MediaTypeNames;
 using System.Collections;
 using Microsoft.EntityFrameworkCore.Metadata;
 using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Components.Forms;
 
 namespace SV.Controllers
 {
@@ -83,7 +84,7 @@ namespace SV.Controllers
         {
             form = Request.Form;
             bool saveForm = ModelState.IsValid;
-            if (saveForm)
+            if (saveForm && IsValidInscriptionDate(form["InscriptionDate"]))
             {
                 _context.Add(realStateForm);
                 await _context.SaveChangesAsync();
@@ -701,6 +702,20 @@ namespace SV.Controllers
                 adjustedYear = limitYear;
             }
             return adjustedYear;
+        }
+
+        public static bool IsValidInscriptionDate(string formDate)
+        {
+            var today = DateTime.Now;
+            var date = DateTime.ParseExact(formDate, "MM/dd/yyyy", CultureInfo.InvariantCulture);
+
+            int compareResult = DateTime.Compare(today, date);
+
+            if (compareResult > 0)
+            {
+                return false;
+            }
+            return true;
         }
 
         public static bool IsValidRut(string rut)
