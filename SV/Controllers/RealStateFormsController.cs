@@ -17,6 +17,7 @@ using System.Linq;
 using static System.Net.Mime.MediaTypeNames;
 using System.Collections;
 using Microsoft.EntityFrameworkCore.Metadata;
+using System.Text.RegularExpressions;
 
 namespace SV.Controllers
 {
@@ -267,47 +268,6 @@ namespace SV.Controllers
                 ownershipPercentage = double.Parse(ownershipPercentageFromForm, CultureInfo.InvariantCulture);
             }
             return ownershipPercentage;
-        }
-
-        private static bool IsValidRut(string rut)
-        {
-            if (string.IsNullOrEmpty(rut))
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private static bool IsValidOwnershipPercentage(double? ownershipPercentage)
-        {
-            bool validPercentage = ownershipPercentage < 0 || ownershipPercentage > 100;
-            if (validPercentage)
-            {
-                return false;
-            }
-            return true;
-        }
-
-        private static bool IsValidBuyersOwnershipPercentageSum(List<string?> buyersOwnershipPercentage)
-        {
-            buyersOwnershipPercentage.RemoveAt(0);
-            double? sumOwnershipPercentage = 0;
-            foreach (var buyerOwnershipPercentage in buyersOwnershipPercentage)
-            {
-                if (string.IsNullOrEmpty(buyerOwnershipPercentage))
-                {
-                    sumOwnershipPercentage += 0;
-                }
-                else
-                {
-                    sumOwnershipPercentage += double.Parse(buyerOwnershipPercentage, CultureInfo.InvariantCulture);
-                }
-            }
-            if (sumOwnershipPercentage > 100)
-            {
-                return false;
-            }
-            return true;
         }
 
         private static async Task AddSellers(InscripcionesBrDbContext _context, IFormCollection form)
@@ -741,6 +701,87 @@ namespace SV.Controllers
                 adjustedYear = limitYear;
             }
             return adjustedYear;
+        }
+
+        public static bool IsValidRut(string rut)
+        {
+            if (string.IsNullOrEmpty(rut))
+            {
+                return false;
+            }
+            rut = rut.Replace(".", "").ToUpper();
+            Regex expression = new Regex("^([0-9]+-[0-9K])$");
+            string dv = rut.Substring(rut.Length - 1, 1);
+            if (!expression.IsMatch(rut))
+            {
+                return false;
+            }
+            char[] separator = { '-' };
+            string[] rutAux = rut.Split(separator);
+            if (dv != CalculateVerificatorDigit(int.Parse(rutAux[0])))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public static string CalculateVerificatorDigit(int rut)
+        {
+            int sum = 0;
+            int multiplier = 1;
+            while (rut != 0)
+            {
+                multiplier++;
+                if (multiplier == 8)
+                    multiplier = 2;
+                sum += (rut % 10) * multiplier;
+                rut /= 10;
+            }
+            sum = 11 - (sum % 11);
+            if (sum == 11)
+            {
+                return "0";
+            }
+            else if (sum == 10)
+            {
+                return "K";
+            }
+            else
+            {
+                return sum.ToString();
+            }
+        }
+
+        private static bool IsValidOwnershipPercentage(double? ownershipPercentage)
+        {
+            bool validPercentage = ownershipPercentage < 0 || ownershipPercentage > 100;
+            if (validPercentage)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        private static bool IsValidBuyersOwnershipPercentageSum(List<string?> buyersOwnershipPercentage)
+        {
+            buyersOwnershipPercentage.RemoveAt(0);
+            double? sumOwnershipPercentage = 0;
+            foreach (var buyerOwnershipPercentage in buyersOwnershipPercentage)
+            {
+                if (string.IsNullOrEmpty(buyerOwnershipPercentage))
+                {
+                    sumOwnershipPercentage += 0;
+                }
+                else
+                {
+                    sumOwnershipPercentage += double.Parse(buyerOwnershipPercentage, CultureInfo.InvariantCulture);
+                }
+            }
+            if (sumOwnershipPercentage > 100)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
