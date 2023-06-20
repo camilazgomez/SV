@@ -21,18 +21,18 @@ public partial class MultiOwner
 
     public string Property { get; set; } = null!;
 
-    public int Sheets { get; set; }
+    public int? Sheets { get; set; }
 
     public DateTime InscriptionDate { get; set; }
 
-    public int InscriptionNumber { get; set; }
+    public int? InscriptionNumber { get; set; }
 
 
     public int ValidityYearBegin { get; set; }
 
     public int? ValidityYearFinish { get; set; }
 
-    public MultiOwner(string rut, double? ownershipPercentage, string commune, string block, string property, int sheets, DateTime inscriptionDate, int inscriptionNumber, int validityYearBegin, int? validityYearFinish)
+    public MultiOwner(string rut, double? ownershipPercentage, string commune, string block, string property, int? sheets, DateTime inscriptionDate, int? inscriptionNumber, int validityYearBegin, int? validityYearFinish)
     {
         Rut = rut;
         OwnershipPercentage = ownershipPercentage;

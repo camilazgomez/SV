@@ -361,13 +361,10 @@ namespace SV.Controllers
             bool oneBuyerAndOneSeller = buyers.Count() == 1 && sellers.Count() == 1;
             if (totalBuyersSum == 100)
             {
-            // TODO: arreglar que porcentaje asignado sea 100 si no hay vendedore no fantasma
-                // TODO: si no porcentaje es suma de vededores no fantasma
                 AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
                 await AddNewMultiOwners(_context, buyers, currentForm);
                 if (sellerMultiOwners.Count() > 0)
                 {
-                    System.Diagnostics.Debug.WriteLine(sellerMultiOwners.Count());
                     List<MultiOwner> multiownersToDelete = new List<MultiOwner>();
                     SetMultiOwnersToDelete(ref multiownersToDelete, sellerMultiOwners, adjustedYear);
                     _context.RemoveRange(multiownersToDelete);
@@ -375,12 +372,20 @@ namespace SV.Controllers
             }
             else if (totalBuyersSumBetween100And0 && oneBuyerAndOneSeller)
             {
-                // TODO: Agregar a multipropietario fantasma con porcentaje 0 en lugar de updetear registro sin info de inscripción
+                // TODO: Arreglar inscription date de ghost
                 AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
-                double? updatedOwnershipSeller = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
-                MultiOwner sellerMO = sellerMultiOwners[0];
-                Person seller = sellers[0];
-                SetMultiOwnerRecords(adjustedYear, ref sellerMO, updatedOwnershipSeller, ref seller, ref buyers);
+                if (sellerMultiOwners.Count() > 0)
+                {
+                    double? updatedOwnershipSeller = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
+                    MultiOwner sellerMO = sellerMultiOwners[0];
+                    Person seller = sellers[0];
+                    SetMultiOwnerRecords(adjustedYear, ref sellerMO, updatedOwnershipSeller, ref seller, ref buyers);
+                }
+                else
+                {
+                    CreateGhostOwner(_context, currentForm, sellers[0].Rut);
+                }
+                
                 await AddNewMultiOwners(_context, buyers, currentForm);
             }
             else
@@ -392,8 +397,16 @@ namespace SV.Controllers
                     Person currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
                                             OrderBy(tableKey => tableKey.Id).LastOrDefault();
                     MultiOwner currentMultiOwner = GetOwnerRecordByRut(_context, rut);
-                    double? newOwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
-                    SetMultiOwnerRecords(adjustedYear, ref currentMultiOwner, newOwnershipPercentage, ref currentSeller, ref buyers);
+                    if (currentMultiOwner != null)
+                    {
+                        double? newOwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
+                        SetMultiOwnerRecords(adjustedYear, ref currentMultiOwner, newOwnershipPercentage, ref currentSeller, ref buyers);
+                    }
+                    else
+                    {
+                        CreateGhostOwner(_context, currentForm, rut);
+                    }
+                    
                 }
                 await AddNewMultiOwners(_context, buyers, currentForm);
             }
@@ -536,6 +549,17 @@ namespace SV.Controllers
                     _context.Add(previousMultiOwner);
                 }
             }
+        }
+
+        private static void CreateGhostOwner(InscripcionesBrDbContext _context, RealStateForm currentForm, string rut)
+        {
+            int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
+            MultiOwner ghostOwner = new MultiOwner(rut, 0,
+                                    currentForm.Commune, currentForm.Block, currentForm.Property,
+                                    null, DateTime.MinValue,
+                                    null, adjustedYear, null);
+            ghostOwner.InscriptionDate = DateTime.MinValue;
+            _context.Add(ghostOwner);
         }
 
         private static void SetMultiOwnerRecords(int adjustedYear, ref MultiOwner multiOwner, double? ownershipPercentage, ref Person seller, ref List<Person> buyers)
