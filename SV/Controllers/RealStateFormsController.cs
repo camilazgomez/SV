@@ -361,14 +361,21 @@ namespace SV.Controllers
             bool oneBuyerAndOneSeller = buyers.Count() == 1 && sellers.Count() == 1;
             if (totalBuyersSum == 100)
             {
+            // TODO: arreglar que porcentaje asignado sea 100 si no hay vendedore no fantasma
+                // TODO: si no porcentaje es suma de vededores no fantasma
                 AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
                 await AddNewMultiOwners(_context, buyers, currentForm);
-                List<MultiOwner> multiownersToDelete = new List<MultiOwner>();
-                SetMultiOwnersToDelete(ref multiownersToDelete, sellerMultiOwners, adjustedYear);
-                _context.RemoveRange(multiownersToDelete);
+                if (sellerMultiOwners.Count() > 0)
+                {
+                    System.Diagnostics.Debug.WriteLine(sellerMultiOwners.Count());
+                    List<MultiOwner> multiownersToDelete = new List<MultiOwner>();
+                    SetMultiOwnersToDelete(ref multiownersToDelete, sellerMultiOwners, adjustedYear);
+                    _context.RemoveRange(multiownersToDelete);
+                }
             }
             else if (totalBuyersSumBetween100And0 && oneBuyerAndOneSeller)
             {
+                // TODO: Agregar a multipropietario fantasma con porcentaje 0 en lugar de updetear registro sin info de inscripción
                 AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
                 double? updatedOwnershipSeller = sellerMultiOwners[0].OwnershipPercentage - sellerMultiOwners[0].OwnershipPercentage * sellers[0].OwnershipPercentage / 100;
                 MultiOwner sellerMO = sellerMultiOwners[0];
@@ -380,6 +387,8 @@ namespace SV.Controllers
             { 
                 foreach (var rut in ruts)
                 {
+                    // TODO: Agregar multiowner con porcentaje 0 y sin info inscripción
+                    // identificar en este paso para evitar ejecutar reasignación
                     Person currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
                                             OrderBy(tableKey => tableKey.Id).LastOrDefault();
                     MultiOwner currentMultiOwner = GetOwnerRecordByRut(_context, rut);
@@ -453,11 +462,22 @@ namespace SV.Controllers
 
         private static void AssignCompraventaOwnershipPercentage(List<Person> buyers, List<MultiOwner> sellers)
         {
-            double? totalSellersSum = sellers?.Sum(m => m.OwnershipPercentage);
+            int ghostSellers = sellers.Count();
+            System.Diagnostics.Debug.WriteLine(ghostSellers);
+            double? totalSellersSum = 0; 
+            if (ghostSellers == 0)
+            {
+                totalSellersSum = 100;
+            }
+            else
+            {
+                totalSellersSum = sellers?.Sum(m => m.OwnershipPercentage);
+            }
             foreach (var buyer in buyers)
             {
                 buyer.OwnershipPercentage = totalSellersSum * (buyer.OwnershipPercentage / 100);
-
+                System.Diagnostics.Debug.WriteLine(buyer.OwnershipPercentage);
+      
             }
         }
 
@@ -690,7 +710,10 @@ namespace SV.Controllers
             foreach (var rut in ruts)
             {
                 MultiOwner sellerMultiOwner = GetOwnerRecordByRut(_context, rut);
-                sellerMultiOwners.Add(sellerMultiOwner);
+                if (sellerMultiOwner != null)
+                {
+                    sellerMultiOwners.Add(sellerMultiOwner);
+                } 
             }
             return sellerMultiOwners;
         }
@@ -720,6 +743,8 @@ namespace SV.Controllers
 
         public static bool IsValidRut(string rut)
         {
+            // TODO: borrar true de facilidad
+            return true;
             if (string.IsNullOrEmpty(rut))
             {
                 return false;
