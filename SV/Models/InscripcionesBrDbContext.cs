@@ -125,6 +125,7 @@ public partial class InscripcionesBrDbContext : DbContext
             entity.Property(e => e.Property)
                 .IsUnicode(false)
                 .HasColumnName("property");
+            entity.Property(e => e.Valid).HasColumnName("valid");
             entity.Property(e => e.Sheets).HasColumnName("sheets");
         });
 

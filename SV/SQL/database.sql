@@ -26,6 +26,7 @@ CREATE TABLE [dbo].[RealStateForm] (
     [sheets]            INT           NOT NULL,
     [inscriptionDate]   DATE          NOT NULL,
     [inscriptionNumber] INT           NOT NULL,
+    [valid]             BIT           NOT NULL,
     PRIMARY KEY CLUSTERED ([attentionNumber] ASC)
 );
 GO
@@ -39,9 +40,9 @@ CREATE TABLE [dbo].[MultiOwner] (
     [commune]             VARCHAR (MAX) NOT NULL,
     [block]               VARCHAR (MAX) NOT NULL,
     [property]            VARCHAR (MAX) NOT NULL,
-    [sheets]              INT           NOT NULL,
-    [inscriptionDate]     DATE          NOT NULL,
-    [inscriptionNumber]   INT           NOT NULL,
+    [sheets]              INT           NULL,
+    [inscriptionDate]     DATE          NULL,
+    [inscriptionNumber]   INT           NULL,
     [validityYearBegin]             INT           NULL,
     [validityYearFinish]             INT           NULL,
     PRIMARY KEY CLUSTERED ([Id] ASC)

@@ -21,5 +21,7 @@ public partial class RealStateForm
 
     public int InscriptionNumber { get; set; }
 
+    public bool Valid { get; set; }
+
     public virtual ICollection<Person> People { get; } = new List<Person>();
 }
