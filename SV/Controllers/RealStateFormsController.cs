@@ -270,6 +270,10 @@ namespace SV.Controllers
 
         private static bool AreValidFormSellers(IFormCollection form)
         {
+            if (form["rutSeller"].Count == 0)
+            {
+                return false;
+            }
             for (int seller = 1; seller < form["rutSeller"].Count; seller++)
             {
                 double? ownershipPercentage;
@@ -406,10 +410,6 @@ namespace SV.Controllers
                     creditedOwnershipBuyers.Add(copyBuyer);
                 }
             }
-            System.Diagnostics.Debug.WriteLine("Cantidad de buyers");
-            System.Diagnostics.Debug.WriteLine(buyers.Count());
-            System.Diagnostics.Debug.WriteLine(creditedOwnershipBuyers.Count());
-
             double? ownershipPercentageToAssign = GetAssignedOwnershipPercentage(creditedOwnershipBuyers, uncreditedOwnershipBuyers);
             foreach (var uncreditedOwnershipBuyer in uncreditedOwnershipBuyers)
             {
@@ -456,7 +456,6 @@ namespace SV.Controllers
             }
             else if (totalBuyersSumBetween100And0 && oneBuyerAndOneSeller)
             {
-                // TODO: Arreglar inscription date de ghost
                 AssignCompraventaOwnershipPercentage(buyers, sellerMultiOwners);
                 if (sellerMultiOwners.Count() > 0)
                 {
@@ -725,13 +724,6 @@ namespace SV.Controllers
                 double? ratio = 100 / sumOfOwnerships;
                 foreach (var owner in sameYearMultiOwners)
                 {
-                    System.Diagnostics.Debug.WriteLine("reajustando owner");
-                    System.Diagnostics.Debug.WriteLine(owner.Rut);
-                    System.Diagnostics.Debug.WriteLine("con ownershio");
-                    System.Diagnostics.Debug.WriteLine(owner.OwnershipPercentage);
-                    System.Diagnostics.Debug.WriteLine("al ratio");
-                    System.Diagnostics.Debug.WriteLine(ratio);
-                    System.Diagnostics.Debug.WriteLine(owner.OwnershipPercentage * ratio);
                     MultiOwner correctedMultiOwner = new MultiOwner(owner.Rut, owner.OwnershipPercentage * ratio,
                                     currentForm.Commune, currentForm.Block, currentForm.Property,
                                     currentForm.Sheets, currentForm.InscriptionDate,
@@ -869,8 +861,6 @@ namespace SV.Controllers
 
         public static bool IsValidRut(string rut)
         {
-            // TODO: borrar true de facilidad
-            return true;
             if (string.IsNullOrEmpty(rut))
             {
                 return false;
