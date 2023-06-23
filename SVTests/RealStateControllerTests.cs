@@ -280,6 +280,7 @@ namespace SVTests
             public ValueTask DisposeAsync()
             {
                 _enumerator.Dispose();
+                GC.SuppressFinalize(this);
                 return new ValueTask();
             }
         }
