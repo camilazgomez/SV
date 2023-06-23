@@ -557,7 +557,6 @@ namespace SV.Controllers
                 }
             }
             await _context.SaveChangesAsync();
-            int allMultiOwners1 = _context.MultiOwners.Count();
         }
 
         private static async Task SetFinalYearPreviousMultiOwners(InscripcionesBrDbContext _context, RealStateForm currentForm)
@@ -678,7 +677,7 @@ namespace SV.Controllers
                 {
                     MultiOwner previousMultiOwner = new(owner.Rut, owner.OwnershipPercentage,
                                     currentForm.Commune, currentForm.Block, currentForm.Property,
-                                    currentForm.Sheets, currentForm.InscriptionDate,
+                                    currentForm.Sheets, owner.InscriptionDate,
                                     owner.InscriptionNumber, owner.ValidityYearBegin, adjustedYear - 1);
                     owner.ValidityYearBegin = adjustedYear;
                     _context.Add(previousMultiOwner);
