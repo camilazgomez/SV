@@ -73,7 +73,7 @@
         <tbody>
             @{
                 if (Model.Sellers != null)
-                    @foreach (var item in Model.Sellers)
+                    foreach (var item in Model.Sellers)
 
                     {
                         <tr>
@@ -113,7 +113,7 @@
             @{
                 if (Model.Buyers != null)
                 {
-                    @foreach (var item in Model.Buyers)
+                    foreach (var item in Model.Buyers)
 
                     {
                         <tr class="heir-row">
@@ -128,7 +128,8 @@
                             </td>
                         </tr>
                     }
-                }   
+                } 
+        }
         </tbody>
     </table>
 </div>
