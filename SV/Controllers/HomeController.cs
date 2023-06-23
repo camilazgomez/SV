@@ -8,14 +8,6 @@ namespace SV.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
-        private readonly InscripcionesBrDbContext _context;
-
-        public HomeController(ILogger<HomeController> logger, InscripcionesBrDbContext contex)
-        {
-            _logger = logger;
-            _context = contex;  
-        }
 
         public IActionResult Index()
         {
