@@ -49,7 +49,7 @@ namespace SVTests
                 { "uncreditedClickedBuyer", new StringValues(new string[] {"false", "false"}) }
             });
 
-            RealStateForm rsform = new RealStateForm
+            RealStateForm rsform = new()
             {
                 AttentionNumber = 12,
                 NatureOfTheDeed = "Compraventa",
@@ -75,14 +75,14 @@ namespace SVTests
                 rsform
             };
 
-            List<Person> people = new List<Person>()
+            List<Person> people = new()
             {
                 new Person { Forms = rsform, Rut = "10.534.906-8", OwnershipPercentage = 30, UncreditedOwnership = false, Seller = true, Heir = false  },
                 new Person { Forms = rsform, Rut = "20.427.455-K", OwnershipPercentage = 10, UncreditedOwnership = false, Seller = false, Heir = true  },
                 new Person { Forms = rsform, Rut = "20.428.706-6", OwnershipPercentage = 20, UncreditedOwnership = false, Seller = false, Heir = true  }
             };
 
-            List<MultiOwner> multiOwner = new List<MultiOwner>()
+            List<MultiOwner> multiOwner = new()
             {
                 new MultiOwner { Rut = "10.534.906-8", OwnershipPercentage = 30, Commune = "Las Condes", Block = "32", Property = "123", Sheets = 1, 
                     InscriptionDate = DateTime.Parse("2021-06-22T19:15"), InscriptionNumber = 1, ValidityYearBegin = 2021, ValidityYearFinish = null }
@@ -137,7 +137,7 @@ namespace SVTests
                 { "Sheets", new StringValues("2") },
                 { "InscriptionDate", new StringValues("2022-06-22T19:15") },
                 { "InscriptionNumber", new StringValues("2") },
-                { "rutSeller", new StringValues(new string[] {}) },
+                { "rutSeller", new StringValues(Array.Empty<string>()) },
                 { "ownershipPercentageSeller", new StringValues(new string[] {"30"}) },
                 { "uncreditedClickedSeller", new StringValues(new string[] {"false"}) },
                 { "rutBuyer", new StringValues(new string[] { "20.427.455-K", "20.428.706-6" }) },
@@ -145,7 +145,7 @@ namespace SVTests
                 { "uncreditedClickedBuyer", new StringValues(new string[] {"false", "false"}) }
             });
 
-            RealStateForm rsform = new RealStateForm
+            RealStateForm rsform = new()
             {
                 AttentionNumber = 12,
                 NatureOfTheDeed = "Compraventa",
@@ -171,19 +171,19 @@ namespace SVTests
                 rsform
             };
 
-            List<Person> people = new List<Person>()
+            List<Person> people = new()
             {
                 new Person { Forms = rsform, Rut = "20.427.455-K", OwnershipPercentage = 10, UncreditedOwnership = false, Seller = false, Heir = true  },
                 new Person { Forms = rsform, Rut = "20.428.706-6", OwnershipPercentage = 20, UncreditedOwnership = false, Seller = false, Heir = true  }
             };
 
-            List<MultiOwner> multiOwner = new List<MultiOwner>()
+            List<MultiOwner> multiOwner = new()
             {
                 new MultiOwner { Rut = "10.534.906-8", OwnershipPercentage = 30, Commune = "Las Condes", Block = "32", Property = "123", Sheets = 1,
                     InscriptionDate = DateTime.Parse("2021-06-22T19:15"), InscriptionNumber = 1, ValidityYearBegin = 2021, ValidityYearFinish = null }
             };
 
-            List<Commune> communes = new List<Commune>()
+            List<Commune> communes = new()
             {
                 new Commune { Name = "Algarrobo" }
             };
