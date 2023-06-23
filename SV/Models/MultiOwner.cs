@@ -32,7 +32,7 @@ public partial class MultiOwner
 
     public int? ValidityYearFinish { get; set; }
 
-    public MultiOwner(string rut, double? ownershipPercentage, string commune, string block, string property, int? sheets, DateTime inscriptionDate, int? inscriptionNumber, int validityYearBegin, int? validityYearFinish)
+    public MultiOwner(string? rut, double? ownershipPercentage, string commune, string block, string property, int? sheets, DateTime inscriptionDate, int? inscriptionNumber, int validityYearBegin, int? validityYearFinish)
     {
         Rut = rut;
         OwnershipPercentage = ownershipPercentage;

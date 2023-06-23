@@ -24,7 +24,7 @@ public partial class Person
 
     public virtual RealStateForm? Forms { get; set; }
 
-    public Person(string rut, double? ownershipPercentage, bool? uncreditedOwnership, int? formsId, bool? seller, bool? heir )
+    public Person(string? rut, double? ownershipPercentage, bool? uncreditedOwnership, int? formsId, bool? seller, bool? heir )
     {
         Rut = rut;
         OwnershipPercentage = ownershipPercentage;

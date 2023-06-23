@@ -20,13 +20,13 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using System.Text.RegularExpressions;
 using Microsoft.AspNetCore.Components.Forms;
 using System.Diagnostics.Metrics;
+using Newtonsoft.Json.Linq;
 
 namespace SV.Controllers
 {
     public class RealStateFormsController : Controller
     {
         private readonly InscripcionesBrDbContext _context;
-        private IFormCollection? form;
         private const string standardPatrimonyRegularisation = "Regularización de Patrimonio";
         private const int limitYear = 2019;
         private const int pairIdentifier = 2;
@@ -83,7 +83,7 @@ namespace SV.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AttentionNumber,NatureOfTheDeed,Commune,Block,Property,Sheets,InscriptionDate,InscriptionNumber")] RealStateForm realStateForm)
         {
-            form = Request.Form;
+            IFormCollection form = Request.Form;
             bool saveForm = ModelState.IsValid;
             if (saveForm && IsValidInscriptionDate(form["InscriptionDate"]))
             {
@@ -281,7 +281,8 @@ namespace SV.Controllers
                 bool uncreditedPercentage;
                 if (form["uncreditedClickedSeller"][seller] != null)
                 {
-                    uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
+                    string? uncreditedPercentageStr = form["uncreditedClickedSeller"][seller];
+                    uncreditedPercentage = uncreditedPercentageStr != null ? bool.Parse(uncreditedPercentageStr) : false;
                 }
                 else
                 {
@@ -318,7 +319,7 @@ namespace SV.Controllers
             return true;
         }
 
-        private static double? GetOwnershipPercentage(bool uncreditedPercentage, string ownershipPercentageFromForm)
+        private static double? GetOwnershipPercentage(bool uncreditedPercentage, string? ownershipPercentageFromForm)
         {
             double? ownershipPercentage;
             if (uncreditedPercentage)
@@ -350,7 +351,8 @@ namespace SV.Controllers
             for (int buyer = 1; buyer < form["rutBuyer"].Count; buyer++)
             {
                 double? ownershipPercentage;
-                bool uncreditedClickedBuyer = bool.Parse(form["uncreditedClickedBuyer"][buyer]);
+                string? uncreditedClickedBuyerStr = form["uncreditedClickedBuyer"][buyer];
+                bool uncreditedClickedBuyer = uncreditedClickedBuyerStr != null ? bool.Parse(uncreditedClickedBuyerStr) : false;
                 if (string.IsNullOrEmpty(form["ownershipPercentageBuyer"][buyer]))
                 {
                     uncreditedClickedBuyer = true;
@@ -485,7 +487,7 @@ namespace SV.Controllers
             { 
                 foreach (var rut in ruts)
                 {
-                    Person currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
+                    Person? currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
                                             OrderBy(tableKey => tableKey.Id).LastOrDefault();
                     MultiOwner currentMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
                     if (currentMultiOwner != null && currentSeller != null)
@@ -665,7 +667,7 @@ namespace SV.Controllers
             await _context.SaveChangesAsync();
         }
 
-        private static void CreateGhostOwner(InscripcionesBrDbContext _context, RealStateForm currentForm, string rut)
+        private static void CreateGhostOwner(InscripcionesBrDbContext _context, RealStateForm currentForm, string? rut)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             MultiOwner ghostOwner = new MultiOwner(rut, 0,
@@ -801,7 +803,7 @@ namespace SV.Controllers
             return queryMultiOwners;
         }
 
-        private static MultiOwner FindNextOwner(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        private static MultiOwner? FindNextOwner(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             var queryMultiOwner = _context.MultiOwners.Where(multiowner => multiowner.ValidityYearBegin > adjustedYear &&
@@ -890,7 +892,7 @@ namespace SV.Controllers
             return true;
         }
 
-        public static bool IsValidRut(string rut)
+        public static bool IsValidRut(string? rut)
         {
             if (string.IsNullOrEmpty(rut))
             {
