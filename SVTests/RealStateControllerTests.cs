@@ -4,13 +4,6 @@ using Moq;
 using SV.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.AspNetCore.Routing;
-using Microsoft.SqlServer.Server;
-using static Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary;
-using System.Linq.Expressions;
-using Microsoft.CodeAnalysis;
-using Microsoft.AspNetCore.Mvc.ViewFeatures;
 
 namespace SVTests
 {
