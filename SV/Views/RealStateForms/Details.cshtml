@@ -71,21 +71,25 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model.Sellers)
+            @{
+                if (Model.Sellers != null)
+                    @foreach (var item in Model.Sellers)
 
-                {
-            <tr>
-                <td>
-                        @Html.DisplayFor(modelItem => item.Rut)
-                </td>
-                <td>
-                        @Html.DisplayFor(modelItem => item.OwnershipPercentage)
-                </td>
-                <td>
-                        @Html.DisplayFor(modelItem => item.UncreditedOwnership)
-                </td>
-            </tr>
-                }
+                    {
+                        <tr>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Rut)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.OwnershipPercentage)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.UncreditedOwnership)
+                            </td>
+                        </tr>
+                    }
+            }
+            
         </tbody>
     </table>
 </div>
@@ -106,21 +110,25 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model.Buyers)
-
+            @{
+                if (Model.Buyers != null)
                 {
-            <tr class="heir-row">
-                <td>
-                        @Html.DisplayFor(modelItem => item.Rut)
-                </td>
-                <td class="ownership-percentage">
-                        @Html.DisplayFor(modelItem => item.OwnershipPercentage)
-                </td>
-                <td>
-                        @Html.DisplayFor(modelItem => item.UncreditedOwnership)
-                </td>
-            </tr>
-                }
+                    @foreach (var item in Model.Buyers)
+
+                    {
+                        <tr class="heir-row">
+                            <td>
+                                @Html.DisplayFor(modelItem => item.Rut)
+                            </td>
+                            <td class="ownership-percentage">
+                                @Html.DisplayFor(modelItem => item.OwnershipPercentage)
+                            </td>
+                            <td>
+                                @Html.DisplayFor(modelItem => item.UncreditedOwnership)
+                            </td>
+                        </tr>
+                    }
+                }   
         </tbody>
     </table>
 </div>

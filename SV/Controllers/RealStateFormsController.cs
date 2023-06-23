@@ -58,12 +58,9 @@ namespace SV.Controllers
             {
                 return NotFound();
             }
-            ExpandedDetailsOfForms viewData = new()
-            {
-                Sellers = _context.People.Where(s => s.FormsId == id && s.Seller == true).ToList(),
-                Buyers = _context.People.Where(s => s.FormsId == id && s.Seller == false).ToList(),
-                RealStateForm = realStateForm
-            };
+            ExpandedDetailsOfForms viewData = new(_context.People.Where(s => s.FormsId == id && s.Seller == true).ToList(),
+                _context.People.Where(s => s.FormsId == id && s.Seller == false).ToList(), realStateForm);
+
             return View(viewData);
         }
 
