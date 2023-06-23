@@ -26,7 +26,7 @@ namespace SV.Controllers
     public class RealStateFormsController : Controller
     {
         private readonly InscripcionesBrDbContext _context;
-        private IFormCollection form;
+        private IFormCollection? form;
         private const string standardPatrimonyRegularisation = "Regularización de Patrimonio";
         private const int limitYear = 2019;
         private const int pairIdentifier = 2;
@@ -210,12 +210,13 @@ namespace SV.Controllers
                 return Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
             }
             var realStateForm = await _context.RealStateForms.FindAsync(id);
-            RealStateForm newValidForm = _context.RealStateForms.Where(e => e.InscriptionDate.Year == realStateForm.InscriptionDate.Year
-                                            && e.InscriptionNumber == realStateForm.InscriptionNumber &&
-                                            e.Valid == false).OrderByDescending(e => e.AttentionNumber).FirstOrDefault();
-            List <Person> peopleToBeRemoved = _context.People.Where(e=> e.FormsId == realStateForm.AttentionNumber).ToList();
+            
             if (realStateForm != null)
             {
+                RealStateForm? newValidForm = _context.RealStateForms.Where(e => e.InscriptionDate.Year == realStateForm.InscriptionDate.Year
+                                            && e.InscriptionNumber == realStateForm.InscriptionNumber &&
+                                            e.Valid == false).OrderByDescending(e => e.AttentionNumber).FirstOrDefault();
+                List<Person> peopleToBeRemoved = _context.People.Where(e => e.FormsId == realStateForm.AttentionNumber).ToList();
                 _context.RemoveRange(peopleToBeRemoved);
                 _context.RealStateForms.Remove(realStateForm);
                 await _context.SaveChangesAsync();
@@ -269,7 +270,7 @@ namespace SV.Controllers
         }
 
         private static bool AreValidFormSellers(IFormCollection form)
-        {
+        {   
             if (form["rutSeller"].Count == 0)
             {
                 return false;
@@ -277,7 +278,16 @@ namespace SV.Controllers
             for (int seller = 1; seller < form["rutSeller"].Count; seller++)
             {
                 double? ownershipPercentage;
-                bool uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
+                bool uncreditedPercentage;
+                if (form["uncreditedClickedSeller"][seller] != null)
+                {
+                    uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
+                }
+                else
+                {
+                    uncreditedPercentage = false;
+                }
+                
                 ownershipPercentage = GetOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
                 bool validInputSeller = IsValidRut(form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
                 if (!validInputSeller)
@@ -478,7 +488,7 @@ namespace SV.Controllers
                     Person currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
                                             OrderBy(tableKey => tableKey.Id).LastOrDefault();
                     MultiOwner currentMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
-                    if (currentMultiOwner != null)
+                    if (currentMultiOwner != null && currentSeller != null)
                     {
                         double? newOwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
                         SetMultiOwnerRecords(adjustedYear, ref currentMultiOwner, newOwnershipPercentage, ref currentSeller, ref buyers);
@@ -558,7 +568,12 @@ namespace SV.Controllers
 
         private static RealStateForm GetLastFormsRecord(InscripcionesBrDbContext _context)
         {
-            return _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
+            RealStateForm? lastRecord = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
+            if (lastRecord == null)
+            {
+                return new RealStateForm();
+            }
+            return lastRecord;
         }
 
         private static void AssignCompraventaOwnershipPercentage(List<Person> buyers, List<MultiOwner> sellers)
@@ -611,21 +626,24 @@ namespace SV.Controllers
                                                     item.Block == currentForm.Block && item.Commune == currentForm.Commune && 
                                                     item.ValidityYearBegin == filteredYears[counter]).
                                                     OrderByDescending(item => item.InscriptionNumber).FirstOrDefault();
-                List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                    && item.Rut == rut && item.ValidityYearBegin == filteredYears[counter]).ToList();
-                List<MultiOwner> multiownersToDelete = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
-                                                    item.Block == currentForm.Block && item.Commune == currentForm.Commune
-                                                    && item.Rut == rut && item.ValidityYearBegin == multiOwnerHighestNumber.ValidityYearBegin &&
-                                                    item.InscriptionNumber != multiOwnerHighestNumber.InscriptionNumber).ToList();
-                double? mergeOwnership = multiownersWithSameRut.Sum(item => item.OwnershipPercentage);
-                MultiOwner multiOwnerToMerge = new MultiOwner(multiOwnerHighestNumber.Rut, mergeOwnership,
-                                    currentForm.Commune, currentForm.Block, currentForm.Property,
-                                    currentForm.Sheets, currentForm.InscriptionDate,
-                                    multiOwnerHighestNumber.InscriptionNumber, adjustedYear, multiOwnerHighestNumber.ValidityYearFinish);
-                _context.Add(multiOwnerToMerge);
-                _context.RemoveRange(multiownersWithSameRut);
-                counter++;
+                if (multiOwnerHighestNumber != null)
+                {
+                    List<MultiOwner> multiownersWithSameRut = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
+                                                                        item.Block == currentForm.Block && item.Commune == currentForm.Commune
+                                                                        && item.Rut == rut && item.ValidityYearBegin == filteredYears[counter]).ToList();
+                    List<MultiOwner> multiownersToDelete = _context.MultiOwners.Where(item => item.Property == currentForm.Property &&
+                                                        item.Block == currentForm.Block && item.Commune == currentForm.Commune
+                                                        && item.Rut == rut && item.ValidityYearBegin == multiOwnerHighestNumber.ValidityYearBegin &&
+                                                        item.InscriptionNumber != multiOwnerHighestNumber.InscriptionNumber).ToList();
+                    double? mergeOwnership = multiownersWithSameRut.Sum(item => item.OwnershipPercentage);
+                    MultiOwner multiOwnerToMerge = new MultiOwner(multiOwnerHighestNumber.Rut, mergeOwnership,
+                                        currentForm.Commune, currentForm.Block, currentForm.Property,
+                                        currentForm.Sheets, currentForm.InscriptionDate,
+                                        multiOwnerHighestNumber.InscriptionNumber, adjustedYear, multiOwnerHighestNumber.ValidityYearFinish);
+                    _context.Add(multiOwnerToMerge);
+                    _context.RemoveRange(multiownersWithSameRut);
+                    counter++;
+                }  
             }
             await _context.SaveChangesAsync();
         }
@@ -807,10 +825,19 @@ namespace SV.Controllers
 
         private static MultiOwner GetOwnerRecordByRut(InscripcionesBrDbContext _context, string rut, RealStateForm currentForm)
         {
-            return _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
+            if (_context == null)
+            {
+                return new MultiOwner();
+            }
+            MultiOwner? ownerByRut = _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
                                                        m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
                                                        m.ValidityYearFinish == null).
                                                        OrderBy(tableKey => tableKey.Id).LastOrDefault();
+            if (ownerByRut == null)
+            {
+                return new MultiOwner();
+            }
+            return ownerByRut;
         }
 
         private static List<MultiOwner> GetAllOwnersFromPeriod(InscripcionesBrDbContext _context, RealStateForm currentForm)
@@ -845,8 +872,12 @@ namespace SV.Controllers
             return adjustedYear;
         }
 
-        public static bool IsValidInscriptionDate(string formDate)
+        public static bool IsValidInscriptionDate(string? formDate)
         {
+            if (formDate == null)
+            {
+                return false;
+            }
             var today = DateTime.Now;
             var date = DateTime.Parse(formDate);
 
