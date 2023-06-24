@@ -250,8 +250,8 @@ namespace SVTests
             if (_controller != null)
             {
                 var result = await _controller.Index();
-
                 var viewResult = result as ViewResult;
+
                 Assert.IsNotNull(viewResult);
                 Assert.IsNotNull(viewResult.Model);
                 var model = viewResult.Model as List<RealStateForm>;
