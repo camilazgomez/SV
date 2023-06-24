@@ -1,6 +1,8 @@
 # SV
 Camila Pizarro &
 Camila Zumaeta
+## Comentarios Adicionales Última entrega
+Se agregaron unit tests que cubren 43% del código. También se añadió validador de rut que valida tanto cantidad de cifras como el digito verificador según el calculo sugerido en https://validarutchile.cl/calcular-digito-verificador.php , por lo que para los casos de prueba es necesario ingresar el número de digitos correcto y el digito verificador correspondiente al calculo. 
 ## Instrucciones
 ### Para ejecutar este programa es importante primero correr la base de datos. Esta se encuentra en la carpeta SQL, en el archivo llamado *database.sql*. 
 Este archivo crea la base de datos con las tablas `RealStateForm`, `People`, `Communes` y `MultiOwner`.
