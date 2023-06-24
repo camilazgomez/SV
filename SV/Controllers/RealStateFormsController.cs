@@ -699,12 +699,17 @@ namespace SV.Controllers
         private static void CreateGhostOwner(InscripcionesBrDbContext _context, RealStateForm currentForm, string? rut)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
-            MultiOwner ghostOwner = new(rut, 0,
-                                    currentForm.Commune, currentForm.Block, currentForm.Property,
-                                    null, DateTime.MinValue,
-                                    null, adjustedYear, null)
-            {
-                InscriptionDate = DateTime.MinValue
+            MultiOwner ghostOwner = new MultiOwner {
+                Rut = rut,
+                Commune = currentForm.Commune,
+                Block = currentForm.Block,
+                Property = currentForm.Property,
+                Sheets = null,
+                InscriptionDate = DateTime.MinValue,
+                InscriptionNumber = null,
+                ValidityYearBegin = adjustedYear,
+                ValidityYearFinish = null,
+                OwnershipPercentage = 0
             };
             _context.Add(ghostOwner);
         }
@@ -791,7 +796,7 @@ namespace SV.Controllers
                     double? partedOwnership = (100-sumOfOwnerships) / numberOfOwners;
                     MultiOwner correctedMultiOwner = new(owner.Rut, partedOwnership,
                                     currentForm.Commune, currentForm.Block, currentForm.Property,
-                                    currentForm.Sheets, currentForm.InscriptionDate,
+                                    currentForm.Sheets, owner.InscriptionDate,
                                     owner.InscriptionNumber, owner.ValidityYearBegin, owner.ValidityYearFinish);
                     _context.Add(correctedMultiOwner);
                     _context.RemoveRange(zeroOwnershipMultiOwners);
