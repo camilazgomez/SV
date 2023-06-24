@@ -114,18 +114,26 @@ namespace SV.Controllers
                 }
                 else
                 {
-                    List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == GetLastFormsRecord(_context).AttentionNumber).ToList();
-                    _context.RemoveRange(peopleToRemoveFromDb);
-                    await _context.SaveChangesAsync();
-                    _context.Remove(realStateForm);
-                    await _context.SaveChangesAsync();
-                    ViewBag.Communes = _context.Commune.ToList();
-                    return View(realStateForm);
+                    RealStateForm? lastRecord = GetLastFormsRecord(_context);
+                    if (lastRecord != null)
+                    {
+                        List<Person> peopleToRemoveFromDb = _context.People.Where(people => people.FormsId == lastRecord.AttentionNumber).ToList();
+                        _context.RemoveRange(peopleToRemoveFromDb);
+                        await _context.SaveChangesAsync();
+                        _context.Remove(realStateForm);
+                        await _context.SaveChangesAsync();
+                        ViewBag.Communes = _context.Commune.ToList();
+                        return View(realStateForm);
+                    }
+                    
                 }
-                RealStateForm currentForm = GetLastFormsRecord(_context);
-                await ManageRepetedForms(_context, currentForm);
-                // await MultiOwnerTableUpdate(_context, currentForm);
-                return RedirectToAction(nameof(Index));
+                RealStateForm? currentForm = GetLastFormsRecord(_context);
+                if (currentForm != null)
+                {
+                    await ManageRepetedForms(_context, currentForm);
+                    return RedirectToAction(nameof(Index));
+                }
+               
             }
             ViewBag.Communes = _context.Commune.ToList();
             return View(realStateForm);
@@ -347,9 +355,15 @@ namespace SV.Controllers
                 string? uncreditedPercentageStr = form["uncreditedClickedSeller"][seller];
                 bool uncreditedPercentage = uncreditedPercentageStr != null && bool.Parse(uncreditedPercentageStr);
                 ownershipPercentage = GetOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
-                Person newSeller = new(form["rutSeller"][seller], ownershipPercentage, uncreditedPercentage, GetLastFormsRecord(_context).AttentionNumber, true, false);
-                _context.Add(newSeller);
-                await _context.SaveChangesAsync();
+                RealStateForm? lastForm = GetLastFormsRecord(_context);
+
+                if (lastForm != null)
+                {
+                    Person newSeller = new(form["rutSeller"][seller], ownershipPercentage, uncreditedPercentage, lastForm.AttentionNumber, true, false);
+                    _context.Add(newSeller);
+                    await _context.SaveChangesAsync();
+
+                }
             }
         }
 
@@ -365,12 +379,16 @@ namespace SV.Controllers
                     uncreditedClickedBuyer = true;
                 }
                 ownershipPercentage = GetOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
-                Person newBuyer = new(form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, GetLastFormsRecord(_context).AttentionNumber, false, true)
+                RealStateForm? lastForm = GetLastFormsRecord(_context);
+                if (lastForm != null )
                 {
-                    Rut = form["rutBuyer"][buyer]
-                };
-                _context.Add(newBuyer);
-                await _context.SaveChangesAsync();
+                    Person newBuyer = new(form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, lastForm.AttentionNumber, false, true)
+                    {
+                        Rut = form["rutBuyer"][buyer]
+                    };
+                    _context.Add(newBuyer);
+                    await _context.SaveChangesAsync();
+                }
             }
         }
 
@@ -512,7 +530,7 @@ namespace SV.Controllers
                 {
                     Person? currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
                                             OrderBy(tableKey => tableKey.Id).LastOrDefault();
-                    MultiOwner currentMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
+                    MultiOwner? currentMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
                     if (currentMultiOwner != null && currentSeller != null)
                     {
                         double? newOwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
@@ -577,14 +595,9 @@ namespace SV.Controllers
             return ownersWithNoPercentage;
         }
 
-        private static RealStateForm GetLastFormsRecord(InscripcionesBrDbContext _context)
+        private static RealStateForm? GetLastFormsRecord(InscripcionesBrDbContext _context)
         {
-            RealStateForm? lastRecord = _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
-            if (lastRecord == null)
-            {
-                return new RealStateForm();
-            }
-            return lastRecord;
+            return _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
         }
 
         private static void AssignCompraventaOwnershipPercentage(List<Person> buyers, List<MultiOwner> sellers)
@@ -843,21 +856,12 @@ namespace SV.Controllers
             return ownershipPercentageToAssign;
         }
 
-        private static MultiOwner GetOwnerRecordByRut(InscripcionesBrDbContext _context, string rut, RealStateForm currentForm)
+        private static MultiOwner? GetOwnerRecordByRut(InscripcionesBrDbContext _context, string rut, RealStateForm currentForm)
         {
-            if (_context == null)
-            {
-                return new MultiOwner();
-            }
-            MultiOwner? ownerByRut = _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
+            return _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
                                                        m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
                                                        m.ValidityYearFinish == null).
                                                        OrderBy(tableKey => tableKey.Id).LastOrDefault();
-            if (ownerByRut == null)
-            {
-                return new MultiOwner();
-            }
-            return ownerByRut;
         }
 
         private static List<MultiOwner> GetAllOwnersFromPeriod(InscripcionesBrDbContext _context, RealStateForm currentForm)
@@ -876,7 +880,7 @@ namespace SV.Controllers
             {
                 if (rut != null)
                 {
-                    MultiOwner sellerMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
+                    MultiOwner? sellerMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
                     if (sellerMultiOwner != null)
                     {
                         sellerMultiOwners.Add(sellerMultiOwner);
