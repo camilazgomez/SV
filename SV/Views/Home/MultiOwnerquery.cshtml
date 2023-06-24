@@ -20,7 +20,8 @@
                         {
                             if (counterOfCommunes == 0)
                             {
-                                if (ViewData["CurrentCommune"] != "")
+                                string currentCommune = ViewData["CurrentCommune"]?.ToString() ?? "";
+                                if (currentCommune != "")
                                 {
                                     <option selected="selected" value="@ViewData["CurrentCommune"]">@ViewData["CurrentCommune"]</option>
                                     <option value="@commune.Name">@commune.Name</option>

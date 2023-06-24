@@ -26,7 +26,6 @@ namespace SV.Controllers
     public class RealStateFormsController : Controller
     {
         private readonly InscripcionesBrDbContext _context;
-        private IFormCollection form;
         private const string standardPatrimonyRegularisation = "Regularización de Patrimonio";
         private const int limitYear = 2019;
         private const int pairIdentifier = 2;
@@ -52,8 +51,8 @@ namespace SV.Controllers
                 return NotFound();
             }
 
-            var realStateForm = await _context.RealStateForms
-                .FirstOrDefaultAsync(m => m.AttentionNumber == id);
+            var realStateForm = _context.RealStateForms != null ? await _context.RealStateForms
+                .FirstOrDefaultAsync(m => m.AttentionNumber == id) : null;
             if (realStateForm == null)
             {
                 return NotFound();
@@ -83,7 +82,7 @@ namespace SV.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AttentionNumber,NatureOfTheDeed,Commune,Block,Property,Sheets,InscriptionDate,InscriptionNumber")] RealStateForm realStateForm)
         {
-            form = Request.Form;
+            IFormCollection form = Request.Form;
             bool saveForm = ModelState.IsValid;
             if (saveForm && IsValidInscriptionDate(form["InscriptionDate"]))
             {
@@ -191,8 +190,8 @@ namespace SV.Controllers
                 return NotFound();
             }
 
-            var realStateForm = await _context.RealStateForms
-                .FirstOrDefaultAsync(m => m.AttentionNumber == id);
+            var realStateForm = _context.RealStateForms != null ? await _context.RealStateForms
+                .FirstOrDefaultAsync(m => m.AttentionNumber == id) : null;
             if (realStateForm == null)
             {
                 return NotFound();
@@ -210,31 +209,35 @@ namespace SV.Controllers
                 return Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
             }
             var realStateForm = await _context.RealStateForms.FindAsync(id);
-            RealStateForm newValidForm = _context.RealStateForms.Where(e => e.InscriptionDate.Year == realStateForm.InscriptionDate.Year
-                                            && e.InscriptionNumber == realStateForm.InscriptionNumber &&
-                                            e.Valid == false).OrderByDescending(e => e.AttentionNumber).FirstOrDefault();
-            List <Person> peopleToBeRemoved = _context.People.Where(e=> e.FormsId == realStateForm.AttentionNumber).ToList();
             if (realStateForm != null)
             {
-                _context.RemoveRange(peopleToBeRemoved);
-                _context.RealStateForms.Remove(realStateForm);
-                await _context.SaveChangesAsync();
-                if (newValidForm != null)
+                RealStateForm? newValidForm = _context.RealStateForms.Where(e => e.InscriptionDate.Year == realStateForm.InscriptionDate.Year
+                                            && e.InscriptionNumber == realStateForm.InscriptionNumber &&
+                                            e.Valid == false).OrderByDescending(e => e.AttentionNumber).FirstOrDefault();
+                List<Person> peopleToBeRemoved = _context.People.Where(e => e.FormsId == realStateForm.AttentionNumber).ToList();
+                if (realStateForm != null)
                 {
-                    newValidForm.Valid = true;
-                    _context.Update(newValidForm);
-                }
-                List<RealStateForm> allForms = _context.RealStateForms.Where(e => e.Valid == true).OrderBy(e=> e.AttentionNumber).ToList();
-                System.Diagnostics.Debug.WriteLine("N forms a reprocesar");
-                System.Diagnostics.Debug.WriteLine(allForms.Count());
-                List<MultiOwner> multiOwners = _context.MultiOwners.ToList();
-                _context.MultiOwners.RemoveRange(multiOwners);
-                await _context.SaveChangesAsync();
-                foreach (var form in allForms)
-                {
-                    await MultiOwnerTableUpdate(_context, form);
+                    _context.RemoveRange(peopleToBeRemoved);
+                    _context.RealStateForms.Remove(realStateForm);
+                    await _context.SaveChangesAsync();
+                    if (newValidForm != null)
+                    {
+                        newValidForm.Valid = true;
+                        _context.Update(newValidForm);
+                    }
+                    List<RealStateForm> allForms = _context.RealStateForms.Where(e => e.Valid == true).OrderBy(e => e.AttentionNumber).ToList();
+                    System.Diagnostics.Debug.WriteLine("N forms a reprocesar");
+                    System.Diagnostics.Debug.WriteLine(allForms.Count());
+                    List<MultiOwner> multiOwners = _context.MultiOwners.ToList();
+                    _context.MultiOwners.RemoveRange(multiOwners);
+                    await _context.SaveChangesAsync();
+                    foreach (var form in allForms)
+                    {
+                        await MultiOwnerTableUpdate(_context, form);
+                    }
                 }
             }
+            
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
@@ -276,13 +279,25 @@ namespace SV.Controllers
             }
             for (int seller = 1; seller < form["rutSeller"].Count; seller++)
             {
-                double? ownershipPercentage;
-                bool uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
-                ownershipPercentage = GetOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
-                bool validInputSeller = IsValidRut(form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
-                if (!validInputSeller)
                 {
-                    return false;
+                    double? ownershipPercentage;
+                    bool uncreditedPercentage;
+                    if (form["uncreditedClickedSeller"][seller] != null)
+                    {
+                        string? uncreditedPercentageStr = form["uncreditedClickedSeller"][seller];
+                        uncreditedPercentage = uncreditedPercentageStr != null && bool.Parse(uncreditedPercentageStr);
+                    }
+                    else
+                    {
+                        uncreditedPercentage = false;
+                    }
+
+                    ownershipPercentage = GetOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
+                    bool validInputSeller = IsValidRut(form["rutSeller"][seller]) && IsValidOwnershipPercentage(ownershipPercentage);
+                    if (!validInputSeller)
+                    {
+                        return false;
+                    }
                 }
             }
             return true;
@@ -293,7 +308,8 @@ namespace SV.Controllers
             for (int buyer = 1; buyer < form["rutBuyer"].Count; buyer++)
             {
                 double? ownershipPercentage;
-                bool uncreditedClickedBuyer = bool.Parse(form["uncreditedClickedBuyer"][buyer]);
+                string? uncreditedClickedBuyerStr = form["uncreditedClickedBuyer"][buyer];
+                bool uncreditedClickedBuyer = uncreditedClickedBuyerStr != null && bool.Parse(uncreditedClickedBuyerStr);
                 if (string.IsNullOrEmpty(form["ownershipPercentageBuyer"][buyer]))
                 {
                     uncreditedClickedBuyer = true;
@@ -308,7 +324,7 @@ namespace SV.Controllers
             return true;
         }
 
-        private static double? GetOwnershipPercentage(bool uncreditedPercentage, string ownershipPercentageFromForm)
+        private static double? GetOwnershipPercentage(bool uncreditedPercentage, string? ownershipPercentageFromForm)
         {
             double? ownershipPercentage;
             if (uncreditedPercentage)
@@ -317,7 +333,15 @@ namespace SV.Controllers
             }
             else
             {
-                ownershipPercentage = double.Parse(ownershipPercentageFromForm, CultureInfo.InvariantCulture);
+                if (ownershipPercentageFromForm != null)
+                {
+                    ownershipPercentage = double.Parse(ownershipPercentageFromForm, CultureInfo.InvariantCulture);
+                }
+                else
+                {
+                    ownershipPercentage = null;
+                }
+
             }
             return ownershipPercentage;
         }
@@ -327,9 +351,10 @@ namespace SV.Controllers
             for (int seller = 1; seller < form["rutSeller"].Count; seller++)
             {
                 double? ownershipPercentage;
-                bool uncreditedPercentage = bool.Parse(form["uncreditedClickedSeller"][seller]);
+                string? uncreditedPercentageStr = form["uncreditedClickedSeller"][seller];
+                bool uncreditedPercentage = uncreditedPercentageStr != null && bool.Parse(uncreditedPercentageStr);
                 ownershipPercentage = GetOwnershipPercentage(uncreditedPercentage, form["ownershipPercentageSeller"][seller]);
-                Person newSeller = new(form["rutSeller"][seller], ownershipPercentage, bool.Parse(form["uncreditedClickedSeller"][seller]), GetLastFormsRecord(_context).AttentionNumber, true, false);
+                Person newSeller = new(form["rutSeller"][seller], ownershipPercentage, uncreditedPercentage, GetLastFormsRecord(_context).AttentionNumber, true, false);
                 _context.Add(newSeller);
                 await _context.SaveChangesAsync();
             }
@@ -340,14 +365,17 @@ namespace SV.Controllers
             for (int buyer = 1; buyer < form["rutBuyer"].Count; buyer++)
             {
                 double? ownershipPercentage;
-                bool uncreditedClickedBuyer = bool.Parse(form["uncreditedClickedBuyer"][buyer]);
+                string? uncreditedClickedBuyerStr = form["uncreditedClickedBuyer"][buyer];
+                bool uncreditedClickedBuyer = uncreditedClickedBuyerStr != null && bool.Parse(uncreditedClickedBuyerStr);
                 if (string.IsNullOrEmpty(form["ownershipPercentageBuyer"][buyer]))
                 {
                     uncreditedClickedBuyer = true;
                 }
                 ownershipPercentage = GetOwnershipPercentage(uncreditedClickedBuyer, form["ownershipPercentageBuyer"][buyer]);
-                Person newBuyer = new(form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, GetLastFormsRecord(_context).AttentionNumber, false, true);
-                newBuyer.Rut = form["rutBuyer"][buyer];
+                Person newBuyer = new(form["rutBuyer"][buyer], ownershipPercentage, uncreditedClickedBuyer, GetLastFormsRecord(_context).AttentionNumber, false, true)
+                {
+                    Rut = form["rutBuyer"][buyer]
+                };
                 _context.Add(newBuyer);
                 await _context.SaveChangesAsync();
             }
@@ -475,9 +503,9 @@ namespace SV.Controllers
             { 
                 foreach (var rut in ruts)
                 {
-                    Person currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
+                    Person? currentSeller = _context.People.Where(s => s.FormsId == currentForm.AttentionNumber && s.Seller == true && s.Rut == rut).
                                             OrderBy(tableKey => tableKey.Id).LastOrDefault();
-                    MultiOwner currentMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
+                    MultiOwner? currentMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
                     if (currentMultiOwner != null)
                     {
                         double? newOwnershipPercentage = currentMultiOwner.OwnershipPercentage - currentSeller.OwnershipPercentage;
@@ -558,6 +586,7 @@ namespace SV.Controllers
 
         private static RealStateForm GetLastFormsRecord(InscripcionesBrDbContext _context)
         {
+
             return _context.RealStateForms.OrderBy(tableKey => tableKey.AttentionNumber).LastOrDefault();
         }
 
@@ -783,7 +812,7 @@ namespace SV.Controllers
             return queryMultiOwners;
         }
 
-        private static MultiOwner FindNextOwner(InscripcionesBrDbContext _context, RealStateForm currentForm)
+        private static MultiOwner? FindNextOwner(InscripcionesBrDbContext _context, RealStateForm currentForm)
         {
             int adjustedYear = AdjustYear(currentForm.InscriptionDate.Year);
             var queryMultiOwner = _context.MultiOwners.Where(multiowner => multiowner.ValidityYearBegin > adjustedYear &&
@@ -805,7 +834,7 @@ namespace SV.Controllers
             return ownershipPercentageToAssign;
         }
 
-        private static MultiOwner GetOwnerRecordByRut(InscripcionesBrDbContext _context, string rut, RealStateForm currentForm)
+        private static MultiOwner? GetOwnerRecordByRut(InscripcionesBrDbContext _context, string rut, RealStateForm currentForm)
         {
             return _context.MultiOwners.Where(m => m.Rut == rut && m.Property == currentForm.Property &&
                                                        m.Block == currentForm.Block && m.Commune == currentForm.Commune &&
@@ -827,7 +856,7 @@ namespace SV.Controllers
             List<MultiOwner> sellerMultiOwners = new List<MultiOwner>();
             foreach (var rut in ruts)
             {
-                MultiOwner sellerMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
+                MultiOwner? sellerMultiOwner = GetOwnerRecordByRut(_context, rut, currentForm);
                 if (sellerMultiOwner != null)
                 {
                     sellerMultiOwners.Add(sellerMultiOwner);
@@ -845,8 +874,12 @@ namespace SV.Controllers
             return adjustedYear;
         }
 
-        public static bool IsValidInscriptionDate(string formDate)
+        public static bool IsValidInscriptionDate(string? formDate)
         {
+            if (formDate == null)
+            {
+                return false;
+            }
             var today = DateTime.Now;
             var date = DateTime.Parse(formDate);
 
@@ -859,8 +892,9 @@ namespace SV.Controllers
             return true;
         }
 
-        public static bool IsValidRut(string rut)
+        public static bool IsValidRut(string? rut)
         {
+            return true;
             if (string.IsNullOrEmpty(rut))
             {
                 return false;

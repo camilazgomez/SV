@@ -22,36 +22,6 @@ namespace SV.Controllers
             return View();
         }
 
-        public async Task<IActionResult> MultiOwnerQuery(string commune, string block, string property, string year )
-           
-        {
-            string emptyString = "";
-            if (_context.MultiOwners == null)
-            {
-                return RedirectToAction("index", "RealStateForm");
-            }
-
-            bool invalidQuery = String.IsNullOrEmpty(commune) || String.IsNullOrEmpty(block) || String.IsNullOrEmpty(property);
-            if (invalidQuery)
-            {
-                ViewData["CurrentCommune"] = emptyString;
-                ViewData["CurrentYear"] = 0;
-                ViewBag.Communes = _context.Commune.ToList();
-                return View(); 
-                
-            }
-            int yearFormatted = int.Parse(year);
-            ViewBag.Communes = _context.Commune.ToList();
-            ViewData["CurrentCommune"] = commune;
-            ViewData["CurrentBlock"] = block;
-            ViewData["CurrentProperty"] = property;
-            ViewData["CurrentYear"] = year;
-            return _context.MultiOwners != null ?
-                          View( _context.MultiOwners.Where(s=> s.Commune == commune && s.Block == block &&  s.Property == property && s.ValidityYearBegin <= yearFormatted && (s.ValidityYearFinish == null || s.ValidityYearFinish >= yearFormatted))):
-                          Problem("Entity set 'InscripcionesBrDbContext.RealStateForms'  is null.");
-           
-        }
-
       
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
